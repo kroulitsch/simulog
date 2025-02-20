@@ -19,10 +19,11 @@ struct toper {
     bool output;
     bool ready;
     int id;
+    char *name;
 };
 
 Node *createNode(bool ready);
-Oper *createOper(int id);
+Oper *createOper(int id, char *name);
 void freeOper(Oper *o);
 void freeNode(Node *n);
 void calculateOper(Oper *o);
@@ -34,12 +35,12 @@ void restartOps(Oper **ops, int oplen);
 void calculateOps(Oper **ops, int oplen);
 
 int main(int argc, int *argv[]) {
-    Oper *in1 = createOper(IN);
-    Oper *in2 = createOper(IN);
+    Oper *in1 = createOper(IN, "in1");
+    Oper *in2 = createOper(IN, "in2");
 
-    Oper *o = createOper(AND);
-    Oper *p = createOper(OR);
-    Oper *q = createOper(OR);
+    Oper *o = createOper(AND, "and");
+    Oper *p = createOper(OR, "or1");
+    Oper *q = createOper(OR, "or2");
     connect(o->nodes[0], in1);
     connect(o->nodes[1], in2);
     connect(p->nodes[0], in1);
@@ -51,30 +52,25 @@ int main(int argc, int *argv[]) {
     int oplen = 5;
 
     calculateOps(ops, oplen);
-    //printf("%i %i\n", o->ready, o->output);
     printf("\n");
 
     flip(in2->nodes[0]);
     calculateOps(ops, oplen);
-    //printf("%i %i\n", o->ready, o->output);
     printf("\n");
     
     flip(in1->nodes[0]);
     flip(in2->nodes[0]);
     calculateOps(ops, oplen);
-    //printf("%i %i\n", o->ready, o->output);
     printf("\n");
     
     flip(in2->nodes[0]);
     calculateOps(ops, oplen);
-    //printf("%i %i\n", o->ready, o->output);
     printf("\n");
 
-    freeOper(o);
-    freeOper(p);
-    freeOper(q);
-    freeOper(in1);
-    freeOper(in2);
+    for(int i = 0; i < oplen; i++) {
+        freeOper(ops[i]);
+    }
+
     return 0;
 }
 
@@ -128,7 +124,7 @@ Node *createNode(bool ready) {
     return n;
 }
 
-Oper *createOper(int id) {
+Oper *createOper(int id, char *name) {
     Oper *o = malloc(sizeof(Oper));
     if(id < LEN) {
         o->inpNum = inpNums[id];
@@ -137,6 +133,7 @@ Oper *createOper(int id) {
         o->inpNum = id;
         o->id = id;
     }
+    o->name = name;
     o->output = 0;
     o->ready = false;
     o->nodes = malloc(o->inpNum * sizeof(Node *));
@@ -190,7 +187,7 @@ void calculateOper(Oper *o) {
     }
 
     o->ready = true;
-    printf("%i: %i\n", o->id, o->output);
+    printf("%s: %i\n", o->name, o->output);
 
     return;
 }
