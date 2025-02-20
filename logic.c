@@ -22,10 +22,27 @@ struct toper {
     char *name;
 };
 
+typedef struct tunit {
+    int inpNum;
+    int outNum;
+    Node **inputs;
+    bool *outputs;
+    bool ready;
+    int id;
+    char *name;
+    Oper **opers;
+    int oplen;
+    struct tunit **units;
+    int unilen;
+} Unit;
+
 Node *createNode(bool ready);
 Oper *createOper(int id, char *name);
+Unit *createUnit(char *name, Oper **opers, int oplen, Unit **units, int unilen);
+
 void freeOper(Oper *o);
 void freeNode(Node *n);
+void freeUnit(Unit *u);
 void calculateOper(Oper *o);
 void calculateNode(Node *n);
 void connect(Node *n, Oper *o);
@@ -41,15 +58,23 @@ int main(int argc, int *argv[]) {
     Oper *o = createOper(AND, "and");
     Oper *p = createOper(OR, "or1");
     Oper *q = createOper(OR, "or2");
+
+    Oper *out1 = createOper(OUT, "out1");
+    Oper *out2 = createOper(OUT, "out2");
     connect(o->nodes[0], in1);
     connect(o->nodes[1], in2);
     connect(p->nodes[0], in1);
     connect(p->nodes[1], o);
     connect(q->nodes[0], o);
     connect(q->nodes[1], p);
+    connect(out1->nodes[0], p);
+    connect(out2->nodes[0], in1);
 
-    Oper *ops[] = {in1, in2, q, o, p};
-    int oplen = 5;
+    Oper *ops[] = {in1, in2, q, o, p, out1, out2};
+    int oplen = 7;
+
+    Unit *units[1] = {NULL};
+    int unilen = 0;
 
     calculateOps(ops, oplen);
     printf("\n");
@@ -67,11 +92,48 @@ int main(int argc, int *argv[]) {
     calculateOps(ops, oplen);
     printf("\n");
 
-    for(int i = 0; i < oplen; i++) {
-        freeOper(ops[i]);
-    }
+    Unit *u = createUnit("test unit", ops, oplen, units, unilen);
+
+    printf("%s: i%i, o%i\n", u->name, u->inpNum, u->outNum);
+
+    freeUnit(u);
 
     return 0;
+}
+
+Unit *createUnit(char *name, Oper **opers, int oplen, Unit **units, int unilen) {
+    Unit *u = malloc(sizeof(Unit));
+    u->name = name;
+    u->opers = opers;
+    u->oplen = oplen;
+    u->units = units;
+    u->unilen = unilen;
+    u->id = 0;
+    int inpNum = 0;
+    int outNum = 0;
+    for(int i = 0; i < oplen; i++) {
+        inpNum += opers[i]->id == IN;
+        outNum += opers[i]->id == OUT;
+    }
+
+    u->inpNum = inpNum;
+    u->outNum = outNum;
+
+    u->ready = false;
+    u->outputs = malloc(outNum * sizeof(bool));
+}
+
+void freeUnit(Unit *u) {
+    free(u->outputs);
+    for(int i = 0; i < u->oplen; i++) {
+        freeOper(u->opers[i]);
+    }
+
+    for(int i = 0; i < u->unilen; i++) {
+        freeUnit(u->units[i]);
+    }
+
+    free(u);
 }
 
 void restartOps(Oper **ops, int oplen) {
