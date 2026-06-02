@@ -1,2 +1,0 @@
-# simulog
-Logic circuits simulator
