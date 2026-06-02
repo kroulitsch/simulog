@@ -1,10 +1,22 @@
-default:
-	gcc logic.c -o logic
+CC = gcc
+PROG = logic
 
-valgrind:
-	gcc -g logic.c -o logic
-	valgrind --show-leak-kinds=all --leak-check=full ./logic
+all: $(PROG).c
+	$(CC) $(PROG).c -o $(PROG)
+
+v: $(PROG)
+	valgrind --show-leak-kinds=all --leak-check=full ./$(PROG)
 
 clone:
+	cd ..
 	rm -rf simulog
 	git clone https://github.com/kroulitsch/simulog.git --branch master
+
+pull:
+	git pull
+
+clean:
+	rm -f $(PROG)
+
+run:
+	./$(PROG)
