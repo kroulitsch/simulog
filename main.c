@@ -1,14 +1,29 @@
-#include "types.h"
+#include "utils.h"
 
+/**
+ * @brief Helper function that performs the `AND` operation.
+ * @param a First pin.
+ * @param b Second pin.
+ */
 bool and(Pin *a, Pin *b) {
     return a->on && b->on;
 }
 
+/**
+ * @brief Helper function that performs the `NOT` operation.
+ * @param a First pin.
+ * @param placeholder Second pin, is not used in this operation.
+ */
 bool not(Pin *a, Pin *placeholder) {
     placeholder = placeholder;
     return !a->on;
 }
 
+/**
+ * @brief This function returns an array of the basic logic gates' blocks.
+ * @param operations Array into which the operations are stored into, for the 
+ * latter memory freeing.
+ */
 Block **getBasics(Operation **operations) {
     Block **basics = malloc(BASICS_SIZE * sizeof(Block *));
     operations[AND] = createOperation("AND", &and);
