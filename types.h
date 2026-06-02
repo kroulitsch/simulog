@@ -48,6 +48,8 @@ Block *createBlock(char *name, int iNum, Pin **inputs, int oNum, Pin **outputs, 
 void freeBlock(Block *b);
 
 void connect(Pin *from, Pin *to);
+void flip(Pin *p, bool on);
+void calculate(Block *b);
 
 void draw(Block *b);
 

@@ -25,12 +25,54 @@ int main(/*int argc, char *argv[]*/) {
     Block **basics = getBasics(basicOpers);
 
     draw(basics[AND]);
-    basics[AND]->inputs[0]->on = true;
-    draw(basics[AND]);
-    basics[AND]->inputs[1]->on = true;
-    draw(basics[AND]);
-    basics[AND]->inputs[0]->on = false;
-    draw(basics[AND]);
+    // flip(basics[AND]->inputs[0], true);
+    // draw(basics[AND]);
+    // flip(basics[AND]->inputs[1], true);
+    // draw(basics[AND]);
+    // flip(basics[AND]->inputs[0], false);
+    // draw(basics[AND]);
+    // flip(basics[AND]->inputs[1], false);
+    // draw(basics[AND]);
+
+    draw(basics[NOT]);
+    // flip(basics[NOT]->inputs[0], true);
+    // draw(basics[NOT]);
+    // flip(basics[NOT]->inputs[0], false);
+    // draw(basics[NOT]);
+
+    Block **nandConns = malloc(2 * sizeof(Block *));
+    nandConns[0] = basics[AND];
+    nandConns[1] = basics[NOT];
+
+    Pin **nandIns = malloc(2 * sizeof(Pin *));
+    for(int i = 0; i < 2; i++) {
+        nandIns[i] = createPin(NULL, NULL, i, true);
+    }
+
+    Pin **nandOuts = malloc(1 * sizeof(Pin *));
+    nandOuts[0] = createPin(NULL, NULL, 0, false);
+
+    Block *nand = createBlock("NAND", 2, nandIns, 1, nandOuts, 2, nandConns);
+
+    for(int i = 0; i < 2; i++) {
+        nandIns[i]->block = nand;
+    }
+    nandOuts[0]->block = nand;
+
+    connect(nandConns[0]->outputs[0], nandConns[1]->inputs[0]);
+    connect(nandIns[0], nandConns[0]->inputs[0]);
+    connect(nandIns[1], nandConns[0]->inputs[1]);
+    connect(nandConns[1]->outputs[0], nandOuts[0]);
+
+    draw(nand);
+    flip(nand->inputs[0], true);
+    draw(nand);
+    flip(nand->inputs[1], true);
+    draw(nand);
+    flip(nand->inputs[0], false);
+    draw(nand);
+    flip(nand->inputs[1], false);
+    draw(nand);
 
     // cleanup
     for (int i = 0; i < BASICS_SIZE; i++) {

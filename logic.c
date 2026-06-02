@@ -174,7 +174,7 @@ void connect_(Node *n, Oper *o) {
     n->source = o;
     //calculateNode(n);
 }
-void flip(Node *n) {
+void flip_(Node *n) {
     //printf("%i -> ", n->value);
     n->value = !n->value;
     //printf("%i\n", n->value);

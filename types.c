@@ -52,12 +52,17 @@ Block *createBasicBlock(int iNum, Operation *oper) {
     b->compCount = 0;
     b->components = NULL;
 
+    calculate(b);
+
     return b;
 }
 
 Block *createBlock(char *name, int iNum, Pin **inputs, int oNum, Pin **outputs, int compCount, Block **components) {
     Block *b = malloc(sizeof(Block));
     b->name = name;
+    b->compCount = compCount;
+    b->components = components;
+
     b->iNum = iNum;
     if(inputs) {
         b->inputs = inputs;
@@ -65,6 +70,7 @@ Block *createBlock(char *name, int iNum, Pin **inputs, int oNum, Pin **outputs, 
         b->inputs = malloc(iNum * sizeof(Pin *));
         for(int i = 0; i < iNum; i++) {
             b->inputs[i] = createPin(NULL, b, i, true);
+            connect(b->inputs[i], b->components[0]->inputs[i]);
         }
     }
 
@@ -75,14 +81,15 @@ Block *createBlock(char *name, int iNum, Pin **inputs, int oNum, Pin **outputs, 
         b->outputs = malloc(oNum * sizeof(Pin *));
         for(int i = 0; i < oNum; i++) {
             b->outputs[i] = createPin(NULL, b, i, false);
+            connect(b->components[b->compCount - 1]->outputs[i], b->outputs[i]);
         }
     }
 
     b->basic = false;
     b->op = NULL;
-    b->compCount = compCount;
-    b->components = components;
 
+    calculate(b);
+    
     return b;
 }
 
@@ -102,11 +109,50 @@ void freeBlock(Block *b) {
     free(b);
 }
 
+void flip(Pin *p, bool on) {
+    if(on != p->on) {
+        p->on = on;
+        calculate(p->block);
+    }
+}
+
 void connect(Pin *from, Pin *to) {
     from->connTo[(from->connCount)++] = to;
     from->connTo = realloc(from->connTo, (from->connCount + 1) * sizeof(Pin *));
 
     to->connFrom = from;
+
+    flip(to, from->on);
+}
+
+void calculate(Block *b) {
+    if (b->basic) {
+        b->outputs[0]->on = b->op->func(b->inputs[0], (b->iNum > 1) ? b->inputs[1] : NULL);
+    } else {
+        for (int i = 0; i < b->iNum; i++) {
+            Pin *in = b->inputs[i];
+            for (int j = 0; j < in->connCount; j++) {
+                in->connTo[j]->on = in->on; 
+            }
+        }
+
+        for (int i = 0; i < b->compCount; i++) {
+            calculate(b->components[i]);
+        }
+
+        for (int i = 0; i < b->oNum; i++) {
+            if (b->outputs[i]->connFrom) {
+                b->outputs[i]->on = b->outputs[i]->connFrom->on;
+            }
+        }
+    }
+
+    for(int i = 0; i < b->oNum; i++) {
+        Pin *out = b->outputs[i];
+        for(int j = 0; j < out->connCount; j++) {
+            flip(out->connTo[j], out->on);
+        }
+    }
 }
 
 void draw(Block *b) {
