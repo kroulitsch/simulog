@@ -51,7 +51,7 @@ void flip(Node *n);
 void restartOps(Oper **ops, int oplen);
 void calculateOps(Oper **ops, int oplen);
 
-int main_(int argc, char *argv[]) {
+int main_(/*int argc, char *argv[]*/) {
     Oper *in1 = createOper(IN, "in1");
     Oper *in2 = createOper(IN, "in2");
 
@@ -121,6 +121,8 @@ Unit *createUnit(char *name, Oper **opers, int oplen, Unit **units, int unilen) 
 
     u->ready = false;
     u->outputs = malloc(outNum * sizeof(bool));
+
+    return u;
 }
 
 void freeUnit(Unit *u) {
@@ -168,7 +170,7 @@ void calculateOps(Oper **ops, int oplen) {
     return;
 }
 
-void connect(Node *n, Oper *o) {
+void connect_(Node *n, Oper *o) {
     n->source = o;
     //calculateNode(n);
 }
