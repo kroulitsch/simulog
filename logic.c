@@ -51,7 +51,7 @@ void flip(Node *n);
 void restartOps(Oper **ops, int oplen);
 void calculateOps(Oper **ops, int oplen);
 
-int main(int argc, int *argv[]) {
+int main_(int argc, char *argv[]) {
     Oper *in1 = createOper(IN, "in1");
     Oper *in2 = createOper(IN, "in2");
 
