@@ -1,6 +1,11 @@
 #include "utils.h"
 
 /**
+ * TODO: make arrays as linked lists for easier element removal
+ * TODO: error codes and error handling
+ */
+
+/**
  * @brief This function creates a `Pin` instance with specific parameters.
  * @param name Name of the pin, paste NULL if not specified.
  * @param block Block that the pin is associated with.
@@ -161,6 +166,12 @@ Block *createBlock(char *name, int iNum, int oNum) {
     return b;
 }
 
+/**
+ * @brief This function adds `component` to the `b` block with a `name`.
+ * @param b Block to be added to.
+ * @param component Component to be added.
+ * @param name Name to be given to the component.
+ */
 void addComponent(Block *b, Block *component, char *name) {
     if(b->compCount == 0) {
         b->components = malloc(sizeof(Block *));
@@ -172,6 +183,12 @@ void addComponent(Block *b, Block *component, char *name) {
     b->components[(b->compCount)++] = component;
 }
 
+/**
+ * @brief This function gets a component of the block with the `name`.
+ * @param b Block to be searched in.
+ * @param name Name of the component to be searched for.
+ * @returns Pointer to the component if found, otherwise NULL and error message.
+ */
 Block *getComponent(Block *b, char *name) {
     for(int i = 0; i < b->compCount; i++) {
         if (strcmp(b->components[i]->name, name) == 0) {
@@ -250,7 +267,7 @@ Block *getInstance(Block *b) {
             Block *oldTarget = oldIn->connTo[c]->block;
             for (int j = 0; j < b->compCount; j++) {
                 if (b->components[j] == oldTarget) {
-                    connect(newB->inputs[i], newB->components[j]->inputs[oldIn->connTo[c]->id]);
+                    connectPins(newB->inputs[i], newB->components[j]->inputs[oldIn->connTo[c]->id]);
                     break;
                 }
             }
@@ -268,11 +285,11 @@ Block *getInstance(Block *b) {
                 Block *oldTarget = oldOut->connTo[c]->block;
 
                 if (oldTarget == b) {
-                    connect(newComp->outputs[o], newB->outputs[oldOut->connTo[c]->id]);
+                    connectPins(newComp->outputs[o], newB->outputs[oldOut->connTo[c]->id]);
                 } else {
                     for(int j = 0; j < b->compCount; j++) {
                         if (b->components[j] == oldTarget) {
-                            connect(newComp->outputs[o], newB->components[j]->inputs[oldOut->connTo[c]->id]);
+                            connectPins(newComp->outputs[o], newB->components[j]->inputs[oldOut->connTo[c]->id]);
                             break;
                         }
                     }
@@ -304,7 +321,7 @@ void flip(Pin *p, bool on) {
  * @param from Output pin of the connection.
  * @param to Input pin of the connection.
  */
-void connect(Pin *from, Pin *to) {
+void connectPins(Pin *from, Pin *to) {
     if(!from || !to) {
         fprintf(stderr, "Connection of NULL pins, abort connection\n");
         return;
@@ -323,6 +340,34 @@ void connect(Pin *from, Pin *to) {
     to->connFrom = from;
 
     flip(to, from->on);
+}
+
+/**
+ * @brief This function connects pins across two components inside the `parent` block.
+ * @param parent Parent block.
+ * @param fromComp Component to connect from.
+ * @param fromPin Pin to connect from.
+ * @param toComp Component to connect to.
+ * @param toPin Pin to connect to.
+ */
+void connect(Block *parent, char *fromComp, char *fromPin, char *toComp, char *toPin) {
+    connectPins(getPin(getComponent(parent, fromComp), fromPin), getPin(getComponent(parent, toComp), toPin));
+}
+
+/**
+ * @brief This function connects `parent` block's pin with a pin of one of its `child` components.
+ * @param parent Parent block to connect.
+ * @param parentPin Parent pin to connect.
+ * @param childComp Child component to connect.
+ * @param childPin Child pin to connect.
+ * @param parentType PinType of the parent pin, direction of the connection (PTYPE_INPUT, PTYPE_OUTPUT).
+ */
+void connectIO(Block *parent, char *parentPin, char *childComp, char *childPin, PinType parentType) {
+    if (parentType == PTYPE_INPUT) {
+        connectPins(getPin(parent, parentPin), getPin(getComponent(parent, childComp), childPin));
+    } else if (parentType == PTYPE_OUTPUT) {
+        connectPins(getPin(getComponent(parent, childComp), childPin), getPin(parent, parentPin));
+    }
 }
 
 /**

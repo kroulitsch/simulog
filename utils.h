@@ -55,7 +55,9 @@ void addComponent(Block *b, Block *component, char *name);
 Block *getComponent(Block *b, char *name);
 void freeBlock(Block *b);
 
-void connect(Pin *from, Pin *to);
+void connectPins(Pin *from, Pin *to);
+void connect(Block *parent, char *fromComp, char *fromPin, char *toComp, char *toPin);
+void connectIO(Block *parent, char *parentPin, char *childComp, char *childPin, PinType parentType);
 void flip(Pin *p, bool on);
 void calculate(Block *b);
 

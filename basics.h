@@ -48,10 +48,10 @@ Block **getBasics() {
 
     basics[NAND] = nand;
 
-    connect(getPin(nand, "IN1"), getPin(getComponent(nand, "AND"), "IN1"));
-    connect(getPin(nand, "IN2"), getPin(getComponent(nand, "AND"), "IN2"));
-    connect(getPin(getComponent(nand, "AND"), "OUT"), getPin(getComponent(nand, "NOT"), "IN"));
-    connect(getPin(getComponent(nand, "NOT"), "OUT"), getPin(nand, "OUT"));
+    connectIO(nand, "IN1", "AND", "IN1", PTYPE_INPUT);
+    connectIO(nand, "IN2", "AND", "IN2", PTYPE_INPUT);
+    connect(nand, "AND", "OUT", "NOT", "IN");
+    connectIO(nand, "OUT", "NOT", "OUT", PTYPE_OUTPUT);
 
     // or
     Block *or = createBlock("OR", 2, 1);
@@ -63,11 +63,11 @@ Block **getBasics() {
     addComponent(or, getInstance(basics[NOT]), "NOT2");
     addComponent(or, getInstance(basics[NAND]), "NAND");
 
-    connect(getPin(or, "IN1"), getPin(getComponent(or, "NOT1"), "IN"));
-    connect(getPin(or, "IN2"), getPin(getComponent(or, "NOT2"), "IN"));
-    connect(getPin(getComponent(or, "NOT1"), "OUT"), getPin(getComponent(or, "NAND"), "IN1"));
-    connect(getPin(getComponent(or, "NOT2"), "OUT"), getPin(getComponent(or, "NAND"), "IN2"));
-    connect(getPin(getComponent(or, "NAND"), "OUT"), getPin(or, "OUT"));
+    connectIO(or, "IN1", "NOT1", "IN", PTYPE_INPUT);
+    connectIO(or, "IN2", "NOT2", "IN", PTYPE_INPUT);
+    connect(or, "NOT1", "OUT", "NAND", "IN1");
+    connect(or, "NOT2", "OUT", "NAND", "IN2");
+    connectIO(or, "OUT", "NAND", "OUT", PTYPE_OUTPUT);
 
     basics[OR] = or;
 
