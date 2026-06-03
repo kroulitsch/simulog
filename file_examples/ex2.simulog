@@ -22,5 +22,4 @@ block: XOR
         AND_1.OUT -> OR_FINAL.IN1
         AND_2.OUT -> OR_FINAL.IN2
 
-        # Finální výstup
         OR_FINAL.OUT -> Q

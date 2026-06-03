@@ -44,6 +44,56 @@ To clean compiled binaries and object artifacts, use:
 make clean
 ```
 
+## Parser and file format
+
+Apart from building the blocks manually in code, a `.simulog` file parser is available to use using the `parseFile()` function.
+To correctly parse a file, it has to follow a format specified below:
+
+```simulog
+# this is a comment
+
+# each block has to start with the 'block:' section, setting the block's name
+block: XOR
+# the 'block:' section is followed with the 'in:' and 'out:' sections,
+# naming the inputs and outputs
+    in: A, B
+    out: Q
+
+# 'components:' section follows, specifying inside components of the block,
+# in the form *component_name* = *block_type*
+    components:
+        NOT_A = NOT
+        NOT_B = NOT
+        AND_1 = AND
+        AND_2 = AND
+        OR_FINAL = OR
+
+# the last section is the 'connections:' section, setting up connections of pins
+# in the form from_component.from_pin -> to_component.to_pin
+    connections:
+        # to reference the block's I/O pins, the component part is left out
+        A -> NOT_A.IN
+        B -> NOT_B.IN
+
+        A -> AND_1.IN1
+        NOT_B.OUT -> AND_1.IN2
+
+        NOT_A.OUT -> AND_2.IN1
+        B -> AND_2.IN2
+
+        AND_1.OUT -> OR_FINAL.IN1
+        AND_2.OUT -> OR_FINAL.IN2
+
+        OR_FINAL.OUT -> Q
+
+# after the last section, the next block specification can start
+# block: ...
+# in: ...
+# ...
+```
+
+As a part of the `parseFile` function call, the database array of existing blocks is passed optionally, from which the components can be referenced. If a `NULL` pointer is passed or `the dbCount` is passed as `0`, the database of basic functions is imported and used. The function returns an array of the parsed and database blocks as one combined array.
+
 ## Future works
 
 In the current state, the library contains the three main structures and their corresponding functions. The pin state calculation is performed recursively upon each input change, therefore in the more complex scenarios some blocks can be recomputed many times over and over, slowing down the simulation.

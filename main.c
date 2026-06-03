@@ -72,7 +72,7 @@ int main(/*int argc, char *argv[]*/) {
 
     Block **parsedBlocks = parseFile("file_examples/ex2.simulog", basics, BASICS_SIZE, &outCount);
 
-    Block *xor = parsedBlocks[BASICS_SIZE];
+    Block *xor = getBlock(parsedBlocks, outCount, "XOR");
 
     draw(xor);
     flip(xor->inputs[0], true);
