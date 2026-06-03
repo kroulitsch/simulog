@@ -44,7 +44,7 @@ void freePin(Pin *p);
 Operation *createOperation(char *name, bool (*function) (Pin *, Pin *));
 void freeOperation(Operation *o);
 Block *createBasicBlock(int iNum, Operation *oper);
-Block *createBlock(char *name, int iNum, Pin **inputs, int oNum, Pin **outputs, int compCount, Block **components);
+Block *createBlock(char *name, int iNum, int oNum, int compCount, Block **components);
 Block *getInstance(Block *b);
 void freeBlock(Block *b);
 

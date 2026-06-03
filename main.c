@@ -59,15 +59,10 @@ int main(/*int argc, char *argv[]*/) {
     nandConns[0] = getInstance(basics[AND]);
     nandConns[1] = getInstance(basics[NOT]);
 
-    Pin **nandIns = malloc(2 * sizeof(Pin *));
-    for(int i = 0; i < 2; i++) {
-        nandIns[i] = createPin(NULL, NULL, i, true);
-    }
+    Block *nand = createBlock("NAND", 2, 1, 2, nandConns);
 
-    Pin **nandOuts = malloc(1 * sizeof(Pin *));
-    nandOuts[0] = createPin(NULL, NULL, 0, false);
-
-    Block *nand = createBlock("NAND", 2, nandIns, 1, nandOuts, 2, nandConns);
+    Pin **nandIns = nand->inputs;
+    Pin **nandOuts = nand->outputs;
 
     for(int i = 0; i < 2; i++) {
         nandIns[i]->block = nand;
@@ -80,14 +75,41 @@ int main(/*int argc, char *argv[]*/) {
     connect(nandConns[1]->outputs[0], nandOuts[0]);
 
     draw(nand);
-    flip(nand->inputs[0], true);
-    draw(nand);
-    flip(nand->inputs[1], true);
-    draw(nand);
-    flip(nand->inputs[0], false);
-    draw(nand);
-    flip(nand->inputs[1], false);
-    draw(nand);
+    // flip(nand->inputs[0], true);
+    // draw(nand);
+    // flip(nand->inputs[1], true);
+    // draw(nand);
+    // flip(nand->inputs[0], false);
+    // draw(nand);
+    // flip(nand->inputs[1], false);
+    // draw(nand);
+
+    Block *not1 = getInstance(basics[NOT]);
+    Block *not2 = getInstance(basics[NOT]);
+    Block *nand1 = getInstance(nand);
+
+    Block **orComps = malloc(3 * sizeof(Block *));
+    orComps[0] = not1;
+    orComps[1] = not2;
+    orComps[2] = nand1;
+
+    Block *or = createBlock("OR", 2, 1, 3, orComps);
+
+    connect(or->inputs[0], not1->inputs[0]);
+    connect(or->inputs[1], not2->inputs[0]);
+    connect(not1->outputs[0], nand1->inputs[0]);
+    connect(not2->outputs[0], nand1->inputs[1]);
+    connect(nand1->outputs[0], or->outputs[0]);
+
+    draw(or);
+    flip(or->inputs[0], true);
+    draw(or);
+    flip(or->inputs[1], true);
+    draw(or);
+    flip(or->inputs[0], false);
+    draw(or);
+    flip(or->inputs[1], false);
+    draw(or);
 
     // cleanup
     for (int i = 0; i < BASICS_SIZE; i++) {
@@ -99,6 +121,7 @@ int main(/*int argc, char *argv[]*/) {
     free(basicOpers);
 
     freeBlock(nand);
+    freeBlock(or);
 
     return 0;
 }

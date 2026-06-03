@@ -83,7 +83,7 @@ Block *createBasicBlock(int iNum, Operation *oper) {
     b->compCount = 0;
     b->components = NULL;
 
-    calculate(b);
+    // calculate(b);
 
     return b;
 }
@@ -99,38 +99,26 @@ Block *createBasicBlock(int iNum, Operation *oper) {
  * @param components Array of component blocks pointers.
  * @returns Pointer to the created block.
  */
-Block *createBlock(char *name, int iNum, Pin **inputs, int oNum, Pin **outputs, int compCount, Block **components) {
+Block *createBlock(char *name, int iNum, int oNum, int compCount, Block **components) {
     Block *b = malloc(sizeof(Block));
     b->name = name;
     b->compCount = compCount;
     b->components = components;
 
     b->iNum = iNum;
-    if(inputs) {
-        b->inputs = inputs;
-    } else {
-        b->inputs = malloc(iNum * sizeof(Pin *));
-        for(int i = 0; i < iNum; i++) {
-            b->inputs[i] = createPin(NULL, b, i, true);
-            connect(b->inputs[i], b->components[0]->inputs[i]);
-        }
+    b->inputs = malloc(iNum * sizeof(Pin *));
+    for (int i = 0; i < iNum; i++) {
+        b->inputs[i] = createPin(NULL, b, i, true);
     }
 
     b->oNum = oNum;
-    if(outputs) {
-        b->outputs = outputs;
-    } else {
-        b->outputs = malloc(oNum * sizeof(Pin *));
-        for(int i = 0; i < oNum; i++) {
-            b->outputs[i] = createPin(NULL, b, i, false);
-            connect(b->components[b->compCount - 1]->outputs[i], b->outputs[i]);
-        }
+    b->outputs = malloc(oNum * sizeof(Pin *));
+    for (int i = 0; i < oNum; i++) {
+        b->outputs[i] = createPin(NULL, b, i, false);
     }
 
     b->basic = false;
     b->op = NULL;
-
-    calculate(b);
     
     return b;
 }
@@ -158,6 +146,10 @@ void freeBlock(Block *b) {
     free(b);
 }
 
+/**
+ * @brief This function creates a deep copy of the `b` block, copies every component and interconnections.
+ * @param b Block to be copied.
+ */
 Block *getInstance(Block *b) {
     if (b->basic) {
         return createBasicBlock(b->iNum, b->op);
@@ -168,7 +160,20 @@ Block *getInstance(Block *b) {
         newComps[i] = getInstance(b->components[i]);
     }
 
-    Block *newB = createBlock(b->name, b->iNum, NULL, b->oNum, NULL, b->compCount, newComps);
+    Block *newB = createBlock(b->name, b->iNum, b->oNum, b->compCount, newComps);
+
+    for (int i = 0; i < b->iNum; i++) {
+        Pin *oldIn = b->inputs[i];
+        for (int c = 0; c < oldIn->connCount; c++) {
+            Block *oldTarget = oldIn->connTo[c]->block;
+            for (int j = 0; j < b->compCount; j++) {
+                if (b->components[j] == oldTarget) {
+                    connect(newB->inputs[i], newB->components[j]->inputs[oldIn->connTo[c]->id]);
+                    break;
+                }
+            }
+        }
+    }
 
     for (int i = 0; i < b->compCount; i++) {
         Block *oldComp = b->components[i];
@@ -180,10 +185,14 @@ Block *getInstance(Block *b) {
             for (int c = 0; c < oldOut->connCount; c++) {
                 Block *oldTarget = oldOut->connTo[c]->block;
 
-                for(int j = 0; j < b->compCount; j++) {
-                    if (b->components[j] == oldTarget) {
-                        connect(newComp->outputs[o], newB->components[j]->inputs[oldOut->connTo[c]->id]);
-                        break;
+                if (oldTarget == b) {
+                    connect(newComp->outputs[o], newB->outputs[oldOut->connTo[c]->id]);
+                } else {
+                    for(int j = 0; j < b->compCount; j++) {
+                        if (b->components[j] == oldTarget) {
+                            connect(newComp->outputs[o], newB->components[j]->inputs[oldOut->connTo[c]->id]);
+                            break;
+                        }
                     }
                 }
             }
@@ -263,6 +272,7 @@ void calculate(Block *b) {
  * @param b Block to be drawn.
  */
 void draw(Block *b) {
+    calculate(b);
     int width = (b->name ? strlen(b->name) + 16 : 16);
     int height = (b->iNum > b->oNum ? b->iNum : b->oNum) * 2;
 
