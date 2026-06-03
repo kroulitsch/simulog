@@ -70,16 +70,32 @@ int main(/*int argc, char *argv[]*/) {
 
     int outCount = 0;
 
-    parseFile("file_examples/ex2.simulog", basics, BASICS_SIZE, &outCount);
+    Block **parsedBlocks = parseFile("file_examples/ex1.simulog", basics, BASICS_SIZE, &outCount);
 
-    printf("ocount = %i\n", outCount);
 
-    // cleanup
-    for (int i = 0; i < BASICS_SIZE; i++) {
-        freeBlock(basics[i]);
+    if (verifyBlock(basics[OR], "00", "0") &&
+        verifyBlock(basics[OR], "10", "1") &&
+        verifyBlock(basics[OR], "01", "1") &&
+        verifyBlock(basics[OR], "11", "1")) {
+        printf("OR gate: PASSED\n");
+    } else {
+        printf("OR gate: FAILED\n");
     }
 
-    free(basics);
+    // cleanup
+    if (parsedBlocks != NULL) {
+        for (int i = 0; i < outCount; i++) {
+            freeBlock(parsedBlocks[i]);
+        }
+        free(parsedBlocks);
+    }
+
+    if (basics != NULL) {
+        // for (int i = 0; i < BASICS_SIZE; i++) {
+        //     freeBlock(basics[i]);
+        // }
+        free(basics);
+    }
 
     return 0;
 }

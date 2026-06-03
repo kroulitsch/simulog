@@ -37,9 +37,9 @@ Pin *createPin(char *name, Block *block, int id, PinType type) {
  */
 void setPinName(Block *b, PinType type, int index, char *name) {
     if(type == PTYPE_INPUT) {
-        b->inputs[index]->name = name;
+        b->inputs[index]->name = (name != NULL) ? strdup(name) : NULL;
     } else if(type == PTYPE_OUTPUT) {
-        b->outputs[index]->name = name;
+        b->outputs[index]->name = (name != NULL) ? strdup(name) : NULL;
     }
 }
 
@@ -144,7 +144,7 @@ Block *createBasicBlock(int iNum, Operation *oper) {
  */
 Block *createBlock(char *name, int iNum, int oNum) {
     Block *b = malloc(sizeof(Block));
-    b->name = name;
+    b->name = (name != NULL) ? strdup(name) : NULL;
     b->compCount = 0;
     b->components = NULL;
 
@@ -179,7 +179,7 @@ void addComponent(Block *b, Block *component, char *name) {
         b->components = realloc(b->components, (b->compCount + 1) * sizeof(Block *));
     }
     
-    component->name = name;
+    component->name = strdup(name);
     b->components[(b->compCount)++] = component;
 }
 
@@ -318,7 +318,7 @@ Block *getInstance(Block *b) {
         }
     }
 
-    calculate(newB);
+    // calculate(newB);
     return newB;
 }
 
@@ -332,7 +332,6 @@ Block *getInstance(Block *b) {
 void flip(Pin *p, bool on) {
     if(on != p->on) {
         p->on = on;
-        calculate(p->block);
     }
 }
 
@@ -358,8 +357,7 @@ void connectPins(Pin *from, Pin *to) {
     from->connTo = realloc(from->connTo, (from->connCount + 1) * sizeof(Pin *));
 
     to->connFrom = from;
-
-    flip(to, from->on);
+    to->on = from->on;
 }
 
 /**
@@ -420,7 +418,7 @@ void calculate(Block *b) {
     for(int i = 0; i < b->oNum; i++) {
         Pin *out = b->outputs[i];
         for(int j = 0; j < out->connCount; j++) {
-            flip(out->connTo[j], out->on);
+            out->connTo[j]->on = out->on;
         }
     }
 }

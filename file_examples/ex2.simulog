@@ -1,6 +1,26 @@
-block: d
-in: a, jkhj, hrh 
-out: b, fgbg , gt #bg
-components:
+block: XOR
+    in: A, B
+    out: Q
 
-connections:
+    components:
+        NOT_A = NOT
+        NOT_B = NOT
+        AND_1 = AND
+        AND_2 = AND
+        OR_FINAL = OR
+
+    connections:
+        A -> NOT_A.IN
+        B -> NOT_B.IN
+
+        A -> AND_1.IN1
+        NOT_B.OUT -> AND_1.IN2
+
+        NOT_A.OUT -> AND_2.IN1
+        B -> AND_2.IN2
+
+        AND_1.OUT -> OR_FINAL.IN1
+        AND_2.OUT -> OR_FINAL.IN2
+
+        # Finální výstup
+        OR_FINAL.OUT -> Q

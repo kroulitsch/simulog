@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "basics.h"
 
 /**
  * @brief This function removes any leading or trailing whitespaces of the `str` string.
@@ -60,6 +61,10 @@ Block **parseFile(char *filename, Block **database, int dbCount, int *outCount) 
     int iNum = 0;
     int oNum = 0;
 
+    if(dbCount == 0) {
+        database = getBasics();
+        dbCount = BASICS_SIZE;
+    }
     int capacity = dbCount + 10;
     int count = 0;
     Block **db = malloc(capacity * sizeof(Block *));
@@ -71,7 +76,6 @@ Block **parseFile(char *filename, Block **database, int dbCount, int *outCount) 
     while (fgets(line, sizeof(line), file) != NULL) {
         lineCount++;
         char *trimmed = trim(line);
-        // skip empty lines and comment lines
         if (trimmed[0] == '\0' || trimmed[0] == '#') {
             continue;
         }
@@ -80,6 +84,7 @@ Block **parseFile(char *filename, Block **database, int dbCount, int *outCount) 
             if(section != NOSECTION && section != CONNECTIONS) {
                 fprintf(stderr, "Incorrect section order on line %i\n", lineCount);
                 fclose(file);
+                free(db);
                 return NULL;
             }
 
@@ -102,7 +107,7 @@ Block **parseFile(char *filename, Block **database, int dbCount, int *outCount) 
         if (strncmp(trimmed, "in:", 3) == 0) {
             if(section != BLOCK) {
                 fprintf(stderr, "Incorrect section order on line %i\n", lineCount);
-                fclose(file);
+                fclose(file); free(db);
                 return NULL;
             }
 
@@ -110,20 +115,20 @@ Block **parseFile(char *filename, Block **database, int dbCount, int *outCount) 
             while (token && iNum < 31) {
                 char *cleanToken = trim(token);
 
-                // A, B C, D
                 for (int i = 0; cleanToken[i] != '\0'; i++) {
                     if (cleanToken[i] == ' ' || cleanToken[i] == '\t' || cleanToken[i] == '\r' || cleanToken[i] == '\n') {
                         fprintf(stderr, "Error: Pin name '%s' contains invalid whitespace on line %i\n", cleanToken, lineCount);
-                        free(db); 
-                        fclose(file); 
+                        free(db); fclose(file); 
+                        for (int j = 0; j < iNum; j++) free(inputs[j]);
                         return NULL; 
                     }
                 }
 
-                // A, ,B, C
                 if (cleanToken[0] == '\0') {
                     fprintf(stderr, "Error: Empty pin name between commas on line %i\n", lineCount);
-                    free(db); fclose(file); return NULL;
+                    free(db); fclose(file);
+                    for (int j = 0; j < iNum; j++) free(inputs[j]);
+                    return NULL;
                 }
 
                 inputs[iNum++] = strdup(cleanToken);
@@ -137,7 +142,8 @@ Block **parseFile(char *filename, Block **database, int dbCount, int *outCount) 
         if (strncmp(trimmed, "out:", 4) == 0) {
             if(section != IN) {
                 fprintf(stderr, "Incorrect section order on line %i\n", lineCount);
-                fclose(file);
+                fclose(file); free(db);
+                for (int j = 0; j < iNum; j++) free(inputs[j]);
                 return NULL;
             }
 
@@ -145,20 +151,22 @@ Block **parseFile(char *filename, Block **database, int dbCount, int *outCount) 
             while (token && oNum < 31) {
                 char *cleanToken = trim(token);
 
-                // A, B C, D
                 for (int i = 0; cleanToken[i] != '\0'; i++) {
                     if (cleanToken[i] == ' ' || cleanToken[i] == '\t' || cleanToken[i] == '\r' || cleanToken[i] == '\n') {
                         fprintf(stderr, "Error: Pin name '%s' contains invalid whitespace on line %i\n", cleanToken, lineCount);
-                        free(db); 
-                        fclose(file); 
+                        free(db); fclose(file); 
+                        for (int j = 0; j < iNum; j++) free(inputs[j]);
+                        for (int j = 0; j < oNum; j++) free(outputs[j]);
                         return NULL; 
                     }
                 }
 
-                // A, ,B, C
                 if (cleanToken[0] == '\0') {
                     fprintf(stderr, "Error: Empty pin name between commas on line %i\n", lineCount);
-                    free(db); fclose(file); return NULL;
+                    free(db); fclose(file);
+                    for (int j = 0; j < iNum; j++) free(inputs[j]);
+                    for (int j = 0; j < oNum; j++) free(outputs[j]);
+                    return NULL;
                 }
 
                 outputs[oNum++] = strdup(cleanToken);
@@ -175,8 +183,6 @@ Block **parseFile(char *filename, Block **database, int dbCount, int *outCount) 
                 setPinName(currentBlock, PTYPE_OUTPUT, i, outputs[i]);
             }
 
-            printf("%s: i %i o %i\n", currentBlock->name, currentBlock->iNum, currentBlock->oNum);
-
             for (int i = 0; i < iNum; i++) free(inputs[i]);
             for (int i = 0; i < oNum; i++) free(outputs[i]);
 
@@ -187,10 +193,9 @@ Block **parseFile(char *filename, Block **database, int dbCount, int *outCount) 
         if (strncmp(trimmed, "components:", 11) == 0) {
             if(section != OUT) {
                 fprintf(stderr, "Incorrect section order on line %i\n", lineCount);
-                fclose(file);
+                fclose(file); free(db);
                 return NULL;
             }
-
 
             section = COMPONENTS;
             continue;
@@ -199,17 +204,86 @@ Block **parseFile(char *filename, Block **database, int dbCount, int *outCount) 
         if (strncmp(trimmed, "connections:", 12) == 0) {
             if(section != COMPONENTS) {
                 fprintf(stderr, "Incorrect section order on line %i\n", lineCount);
-                fclose(file);
+                fclose(file); free(db);
                 return NULL;
             }
 
             section = CONNECTIONS;
             continue;
         }
+
+        if (section == COMPONENTS) {
+            char instName[64];
+            char typeName[64];
+
+            if (sscanf(trimmed, "%63s = %63s", instName, typeName) == 2) {
+                Block *base = getBlock(db, count, typeName);
+                if (base != NULL) {
+                    addComponent(currentBlock, getInstance(base), instName);
+                } else {
+                    fprintf(stderr, "Unknown component type '%s' on line %i\n", typeName, lineCount);
+                    free(db); fclose(file);
+                    return NULL;
+                }
+            } else {
+                fprintf(stderr, "Invalid component format on line %i\n", lineCount);
+                free(db); fclose(file);
+                return NULL;
+            }
+        } else if (section == CONNECTIONS) {
+            char *arrow = strstr(trimmed, "->");
+            if(arrow != NULL) {
+                *arrow = '\0';
+
+                char leftBuffer[128];
+                char rightBuffer[128];
+                strcpy(leftBuffer, trim(trimmed));
+                strcpy(rightBuffer, trim(arrow + 2));
+
+                char fromComp[64], fromPin[64];
+                char toComp[64], toPin[64];
+
+                char *dotL = strchr(leftBuffer, '.');
+                if(dotL != NULL) {
+                    *dotL = '\0';
+                    strcpy(fromComp, trim(leftBuffer));
+                    strcpy(fromPin, trim(dotL + 1));
+                } else {
+                    strcpy(fromComp, "__SELF__");
+                    strcpy(fromPin, trim(leftBuffer));
+                }
+
+                char *dotR = strchr(rightBuffer, '.');
+                if(dotR != NULL) {
+                    *dotR = '\0';
+                    strcpy(toComp, trim(rightBuffer));
+                    strcpy(toPin, trim(dotR + 1));
+                } else {
+                    strcpy(toComp, "__SELF__");
+                    strcpy(toPin, trim(rightBuffer));
+                }
+
+                if (fromPin[0] == '\0' || toPin[0] == '\0') {
+                    fprintf(stderr, "Empty pin name on line %i\n", lineCount);
+                    free(db); fclose(file); return NULL;
+                }
+
+                if (strcmp(fromComp, "__SELF__") == 0) {
+                    connectIO(currentBlock, fromPin, toComp, toPin, PTYPE_INPUT);
+                } else if (strcmp(toComp, "__SELF__") == 0) {
+                    connectIO(currentBlock, toPin, fromComp, fromPin, PTYPE_OUTPUT);
+                } else {
+                    connect(currentBlock, fromComp, fromPin, toComp, toPin);
+                }
+            } else {
+                fprintf(stderr, "Invalid connection format (-> missing) on line %i\n", lineCount);
+                free(db); fclose(file); return NULL;
+            }
+        }
     }
 
     if(section != NOSECTION && section != CONNECTIONS) {
-        fprintf(stderr, "Block unit doesn't contain all mandatory sections\n", lineCount);
+        fprintf(stderr, "Block unit doesn't contain all mandatory sections\n");
     }
 
     if (currentBlock != NULL) {

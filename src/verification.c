@@ -33,6 +33,7 @@ bool setInputs(Block *b, char *values) {
         }
     }
 
+    calculate(b);
     return true;
 }
 
@@ -54,6 +55,8 @@ bool verifyBlock(Block *b, char *inputs, char *outputs) {
         fprintf(stderr, "Invalid outputs length of \"%s\"\n", outputs);
         return false;
     }
+
+    calculate(b);
 
     for (int i = 0; i < b->oNum; i++) {
         char c = outputs[i];
