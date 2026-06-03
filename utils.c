@@ -143,16 +143,55 @@ void freeBlock(Block *b) {
     for (int i = 0; i < b->iNum; i++) {
         freePin(b->inputs[i]);
     }
-
     free(b->inputs);
 
     for (int i = 0; i < b->oNum; i++) {
         freePin(b->outputs[i]);
     }
-
     free(b->outputs);
 
+    for (int i = 0; i < b->compCount; i++) {
+        freeBlock(b->components[i]);
+    }
+    free(b->components);
+
     free(b);
+}
+
+Block *getInstance(Block *b) {
+    if (b->basic) {
+        return createBasicBlock(b->iNum, b->op);
+    }
+
+    Block **newComps = malloc(b->compCount * sizeof(Block *));
+    for (int i = 0; i < b->compCount; i++) {
+        newComps[i] = getInstance(b->components[i]);
+    }
+
+    Block *newB = createBlock(b->name, b->iNum, NULL, b->oNum, NULL, b->compCount, newComps);
+
+    for (int i = 0; i < b->compCount; i++) {
+        Block *oldComp = b->components[i];
+        Block *newComp = newB->components[i];
+
+        for (int o = 0; o < oldComp->oNum; o++) {
+            Pin *oldOut = oldComp->outputs[o];
+
+            for (int c = 0; c < oldOut->connCount; c++) {
+                Block *oldTarget = oldOut->connTo[c]->block;
+
+                for(int j = 0; j < b->compCount; j++) {
+                    if (b->components[j] == oldTarget) {
+                        connect(newComp->outputs[o], newB->components[j]->inputs[oldOut->connTo[c]->id]);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    calculate(newB);
+    return newB;
 }
 
 /**

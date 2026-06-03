@@ -56,8 +56,8 @@ int main(/*int argc, char *argv[]*/) {
     // draw(basics[NOT]);
 
     Block **nandConns = malloc(2 * sizeof(Block *));
-    nandConns[0] = basics[AND];
-    nandConns[1] = basics[NOT];
+    nandConns[0] = getInstance(basics[AND]);
+    nandConns[1] = getInstance(basics[NOT]);
 
     Pin **nandIns = malloc(2 * sizeof(Pin *));
     for(int i = 0; i < 2; i++) {
@@ -97,6 +97,8 @@ int main(/*int argc, char *argv[]*/) {
 
     free(basics);
     free(basicOpers);
+
+    freeBlock(nand);
 
     return 0;
 }
