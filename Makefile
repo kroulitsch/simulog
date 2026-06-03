@@ -2,13 +2,19 @@ CC = gcc
 CFLAGS = -Wall -Wextra -g
 PROG = main
 
-SRCS = $(wildcard *.h) $(wildcard *.c)
 C_FILES = $(wildcard *.c)
+OBJS = $(C_FILES:.c=.o)
+H_FILES = $(wildcard *.h)
 
 all: $(PROG)
 
-$(PROG): $(C_FILES)
-	$(CC) $(CFLAGS) $(C_FILES) -o $(PROG)
+$(PROG): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(PROG)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJS): $(H_FILES)
 
 v: $(PROG)
 	valgrind --show-leak-kinds=all --leak-check=full ./$(PROG)
@@ -20,7 +26,9 @@ pull:
 	git pull
 
 clean:
-	rm -f $(PROG)
+	rm -f $(PROG) $(OBJS)
 
 run: $(PROG)
 	./$(PROG)
+
+.PHONY: all v clone pull clean run
