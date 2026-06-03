@@ -23,6 +23,13 @@ Pin *createPin(char *name, Block *block, int id, PinType type) {
     return p;
 }
 
+/**
+ * @brief This function sets the name of the blokck's I/O pin of the specified index.
+ * @param b Block to set the name in.
+ * @param type Type of the pin (PTYPE_INPUT/PTYPE_OUTPUT).
+ * @param index Index of the pin.
+ * @param name Name to be given to the pin.
+ */
 void setPinName(Block *b, PinType type, int index, char *name) {
     if(type == PTYPE_INPUT) {
         b->inputs[index]->name = name;
@@ -31,6 +38,12 @@ void setPinName(Block *b, PinType type, int index, char *name) {
     }
 }
 
+/**
+ * @brief This function is a pin selector.
+ * @param b Block to get the pin from.
+ * @param name Name of the pin to be returned.
+ * @returns Selected pin pointer. If no pin is found, returns NULL and raises error.
+ */
 Pin *getPin(Block *b, char *name) {
     for (int i = 0; i < b->iNum; i++) {
         if(!b->inputs[i]->name) continue;
@@ -119,9 +132,7 @@ Block *createBasicBlock(int iNum, Operation *oper) {
  * @brief This function creates an `Block` instance of the composite logic circuit consisting of many components.
  * @param name Name of the block.
  * @param iNum Number of input pins.
- * @param inputs Array of input pins pointers.
  * @param oNum Number of output pins.
- * @param outputs Array of output pins pointers.
  * @param compCount Number of component blocks.
  * @param components Array of component blocks pointers.
  * @returns Pointer to the created block.
@@ -180,6 +191,7 @@ void freeBlock(Block *b) {
 /**
  * @brief This function creates a deep copy of the `b` block, copies every component and interconnections.
  * @param b Block to be copied.
+ * @returns Newly created copied Block instance pointer.
  */
 Block *getInstance(Block *b) {
     if (b->basic) {
@@ -272,6 +284,10 @@ void flip(Pin *p, bool on) {
  * @param to Input pin of the connection.
  */
 void connect(Pin *from, Pin *to) {
+    if(!from || !to) {
+        fprintf(stderr, "Connection of NULL pins, abort connection\n");
+        return;
+    }
     bool isFromValid = (from->type == PTYPE_OUTPUT || from->type == PTYPE_BOTH);
     bool isToValid   = (to->type == PTYPE_INPUT   || to->type == PTYPE_BOTH);
 
@@ -325,12 +341,12 @@ void calculate(Block *b) {
 
 /**
  * @brief This function draws an ASCII console representation of the block `b`. The visualization
- * also captures the current state of the pins [ on -> (*), off -> ( ) ].
+ * also captures the names and the current state of its pins [ on -> (*), off -> ( ) ].
  * @param b Block to be drawn.
  */
 void draw(Block *b) {
     calculate(b);
-    int width = (b->name ? strlen(b->name) + 16 : 16);
+    int width = (b->name ? strlen(b->name) + 26 : 26);
     int height = (b->iNum > b->oNum ? b->iNum : b->oNum) * 2;
 
     int iNum = 0;
@@ -350,11 +366,12 @@ void draw(Block *b) {
     printf(" | \n");
 
     for(int i = 0; i < height + 1; i++) {
+        int targetInIdx = -1;
         bool drawIn = false;
-        if (b->iNum == 1 && i == height / 2) drawIn = true;
+        if (b->iNum == 1 && i == height / 2) { drawIn = true; targetInIdx = 0; }
         else if (b->iNum > 1) {
             for (int k = 0; k < b->iNum; k++) {
-                if (i == (k * height) / (b->iNum - 1)) drawIn = true;
+                if (i == (k * height) / (b->iNum - 1)) { drawIn = true; targetInIdx = k; }
             }
         }
 
@@ -364,25 +381,41 @@ void draw(Block *b) {
             printf(" | ");
         }
 
+        int usedSpaces = 0;
+
+        if (drawIn && b->inputs[targetInIdx]->name) {
+            printf(" %s", b->inputs[targetInIdx]->name);
+            usedSpaces += strlen(b->inputs[targetInIdx]->name) + 1;
+        }
+
+        int centerStart = (width - 2 - (b->name ? strlen(b->name) : 0)) / 2;
+        
+        int spacesToCenter = centerStart - usedSpaces;
         if (i == height / 2) {
-            int nameLen = strlen(b->name);
-            int spacesBefore = (width - 2 - nameLen) / 2;
-            int spacesAfter = width - 2 - nameLen - spacesBefore;
-            for(int j = 0; j < spacesBefore; j++) printf(" ");
-            printf("%s", b->name);
-            for(int j = 0; j < spacesAfter; j++) printf(" ");
+            for(int j = 0; j < spacesToCenter; j++) printf(" ");
+            if (b->name) printf("%s", b->name);
+            usedSpaces += spacesToCenter + (b->name ? strlen(b->name) : 0);
         } else {
-            for(int j = 0; j < width - 2; j++) {
-                printf(" ");
+            for(int j = 0; j < spacesToCenter; j++) printf(" ");
+            usedSpaces += spacesToCenter;
+        }
+
+        int targetOutIdx = -1;
+        bool drawOut = false;
+        if (b->oNum == 1 && i == height / 2) { drawOut = true; targetOutIdx = 0; }
+        else if (b->oNum > 1) {
+            for (int k = 0; k < b->oNum; k++) {
+                if (i == (k * height) / (b->oNum - 1)) { drawOut = true; targetOutIdx = k; }
             }
         }
 
-        bool drawOut = false;
-        if (b->oNum == 1 && i == height / 2) drawOut = true;
-        else if (b->oNum > 1) {
-            for (int k = 0; k < b->oNum; k++) {
-                if (i == (k * height) / (b->oNum - 1)) drawOut = true;
-            }
+        int rightTextLen = (drawOut && b->outputs[targetOutIdx]->name) ? strlen(b->outputs[targetOutIdx]->name) + 1 : 0;
+        int spacesToRight = (width - 2) - usedSpaces - rightTextLen;
+
+        for(int j = 0; j < spacesToRight; j++) printf(" ");
+        
+        if (rightTextLen > 0) {
+            printf("%s ", b->outputs[targetOutIdx]->name);
         }
 
         if(drawOut) {
