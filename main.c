@@ -1,6 +1,7 @@
 #include "utils.h"
 #include "basics.h"
 #include "verification.h"
+#include "parser.h"
 
 int main(/*int argc, char *argv[]*/) {
     Block **basics = getBasics();
