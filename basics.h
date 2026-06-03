@@ -29,9 +29,12 @@ Block **getBasics() {
 
     // and
     basics[AND] = createBasicBlock(2, createOperation("AND", &and));
+    setPinName(basics[AND], PTYPE_INPUT, 0, "IN1");
+    setPinName(basics[AND], PTYPE_INPUT, 1, "IN2");
 
     // not
     basics[NOT] = createBasicBlock(1, createOperation("NOT", &not));
+    setPinName(basics[NOT], PTYPE_INPUT, 0, "IN");
 
     // nand
     Block **nandConns = (Block **)malloc(2 * sizeof(Block *));
@@ -39,18 +42,21 @@ Block **getBasics() {
     nandConns[1] = getInstance(basics[NOT]);
 
     Block *nand = createBlock("NAND", 2, 1, 2, nandConns);
-
-    connect(nandConns[0]->outputs[0], nandConns[1]->inputs[0]);
-    connect(nand->inputs[0], nandConns[0]->inputs[0]);
-    connect(nand->inputs[1], nandConns[0]->inputs[1]);
-    connect(nandConns[1]->outputs[0], nand->outputs[0]);
+    setPinName(nand, PTYPE_INPUT, 0, "IN1");
+    setPinName(nand, PTYPE_INPUT, 1, "IN2");
+    setPinName(nand, PTYPE_OUTPUT, 0, "OUT"); 
 
     basics[NAND] = nand;
+
+    connect(getPin(nandConns[0], "OUT"), getPin(nandConns[1], "IN"));
+    connect(getPin(nand, "IN1"), getPin(nandConns[0], "IN1"));
+    connect(getPin(nand, "IN2"), getPin(nandConns[0], "IN2"));
+    connect(getPin(nandConns[1], "OUT"), getPin(nand, "OUT"));
 
     // or
     Block *not1 = getInstance(basics[NOT]);
     Block *not2 = getInstance(basics[NOT]);
-    Block *nand1 = getInstance(basics[NAND]);
+    Block *nand1 = getInstance(basics[NAND]); 
 
     Block **orComps = (Block **)malloc(3 * sizeof(Block *));
     orComps[0] = not1;
@@ -58,12 +64,15 @@ Block **getBasics() {
     orComps[2] = nand1;
 
     Block *or = createBlock("OR", 2, 1, 3, orComps);
+    setPinName(or, PTYPE_INPUT, 0, "IN1");
+    setPinName(or, PTYPE_INPUT, 1, "IN2");
+    setPinName(or, PTYPE_OUTPUT, 0, "OUT"); 
 
-    connect(or->inputs[0], not1->inputs[0]);
-    connect(or->inputs[1], not2->inputs[0]);
-    connect(not1->outputs[0], nand1->inputs[0]);
-    connect(not2->outputs[0], nand1->inputs[1]);
-    connect(nand1->outputs[0], or->outputs[0]);
+    connect(getPin(or, "IN1"), getPin(not1, "IN"));
+    connect(getPin(or, "IN2"), getPin(not2, "IN"));
+    connect(getPin(not1, "OUT"), getPin(nand1, "IN1"));
+    connect(getPin(not2, "OUT"), getPin(nand1, "IN2"));
+    connect(getPin(nand1, "OUT"), getPin(or, "OUT"));
 
     basics[OR] = or;
 

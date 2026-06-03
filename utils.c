@@ -23,6 +23,33 @@ Pin *createPin(char *name, Block *block, int id, PinType type) {
     return p;
 }
 
+void setPinName(Block *b, PinType type, int index, char *name) {
+    if(type == PTYPE_INPUT) {
+        b->inputs[index]->name = name;
+    } else if(type == PTYPE_OUTPUT) {
+        b->outputs[index]->name = name;
+    }
+}
+
+Pin *getPin(Block *b, char *name) {
+    for (int i = 0; i < b->iNum; i++) {
+        if(!b->inputs[i]->name) continue;
+        if (strcmp(b->inputs[i]->name, name) == 0) {
+            return b->inputs[i];
+        }
+    }
+
+    for (int i = 0; i < b->oNum; i++) {
+        if(!b->outputs[i]->name) continue;
+        if (strcmp(b->outputs[i]->name, name) == 0) {
+            return b->outputs[i];
+        }
+    }
+
+    fprintf(stderr, "Block %s doesn't have a pin named %s\n", b->name, name);
+    return NULL;
+}
+
 /**
  * @brief This function frees the `Pin` instance.
  * @param p Pointer to the pin to be freed.
@@ -157,7 +184,16 @@ void freeBlock(Block *b) {
 Block *getInstance(Block *b) {
     if (b->basic) {
         Operation *op = createOperation(b->op->name, b->op->func);
-        return createBasicBlock(b->iNum, op);
+        Block *newB = createBasicBlock(b->iNum, op);
+        for (int i = 0; i < b->iNum; i++) {
+            newB->inputs[i]->name = b->inputs[i]->name;
+        }
+
+        for (int i = 0; i < b->oNum; i++) {
+            newB->outputs[i]->name = b->outputs[i]->name;
+        }
+
+        return newB;
     }
 
     Block **newComps = malloc(b->compCount * sizeof(Block *));
@@ -166,6 +202,14 @@ Block *getInstance(Block *b) {
     }
 
     Block *newB = createBlock(b->name, b->iNum, b->oNum, b->compCount, newComps);
+
+    for (int i = 0; i < b->iNum; i++) {
+        newB->inputs[i]->name = b->inputs[i]->name;
+    }
+
+    for (int i = 0; i < b->oNum; i++) {
+        newB->outputs[i]->name = b->outputs[i]->name;
+    }
 
     for (int i = 0; i < b->iNum; i++) {
         Pin *oldIn = b->inputs[i];
@@ -233,6 +277,7 @@ void connect(Pin *from, Pin *to) {
 
     if(!isToValid || !isFromValid) {
         fprintf(stderr, "Invalid connection at %s -> %s\n", from->block->name, to->block->name);
+        return;
     }
 
     from->connTo[(from->connCount)++] = to;

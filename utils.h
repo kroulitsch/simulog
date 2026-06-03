@@ -41,9 +41,13 @@ struct block_t {
 };
 
 Pin *createPin(char *name, Block *block, int id, PinType type);
+void setPinName(Block *b, PinType type, int index, char *name);
+Pin *getPin(Block *b, char *name);
 void freePin(Pin *p);
+
 Operation *createOperation(char *name, bool (*function) (Pin *, Pin *));
 void freeOperation(Operation *o);
+
 Block *createBasicBlock(int iNum, Operation *oper);
 Block *createBlock(char *name, int iNum, int oNum, int compCount, Block **components);
 Block *getInstance(Block *b);
