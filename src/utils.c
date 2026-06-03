@@ -201,6 +201,26 @@ Block *getComponent(Block *b, char *name) {
 }
 
 /**
+ * @brief This function gets a block from an array of `blocks` by its `name`.
+ * @param blocks Array of blocks to be searched in.
+ * @param blockCount Size of the array.
+ * @param name Name of the searched block.
+ * @returns Pointer to the block if found, NULL otherwise
+ */
+Block *getBlock(Block **blocks, int blockCount, char *name) {
+    for (int i = 0; i < blockCount; i++) {
+        Block *b = blocks[i];
+        if(!b->name) continue;
+        if (strcmp(b->name, name) == 0) {
+            return b;
+        }
+    }
+
+    fprintf(stderr, "Block with name '%s' not found in the array\n", name);
+    return NULL;
+}
+
+/**
  * @brief This function frees the `Block` instance.
  * @param o Pointer to the block to be freed.
  */

@@ -1,0 +1,31 @@
+block: BLOCK1
+    in: A, B
+    out: X, Y
+
+    components:
+        AND1 = AND
+        AND2 = AND
+        NOT1 = NOT
+
+    connections:
+        A -> AND1.IN1
+        B -> AND1.IN2
+        B -> NOT1.IN
+        AND1.OUT -> AND2.IN1
+        NOT1.OUT -> AND2.IN2
+        AND2.OUT -> X
+        NOT1.OUT -> Y
+
+block: BLOCK2
+    in: I1
+    out: O1
+
+    components:
+        B1 = BLOCK1
+        N1 = NOT
+    
+    connections:
+        I1 -> B1.A
+        I1 -> B1.B
+        B1.X -> N1.IN
+        N1.OUT -> O1
