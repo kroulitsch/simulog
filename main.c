@@ -68,6 +68,12 @@ int main(/*int argc, char *argv[]*/) {
         printf("OR gate: FAILED\n");
     }
 
+    int outCount = 0;
+
+    parseFile("file_examples/ex2.simulog", basics, BASICS_SIZE, &outCount);
+
+    printf("ocount = %i\n", outCount);
+
     // cleanup
     for (int i = 0; i < BASICS_SIZE; i++) {
         freeBlock(basics[i]);

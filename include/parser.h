@@ -2,8 +2,8 @@
 #define PARSER_H
 #include "utils.h"
 
-enum Section {BLOCK, COMPONENTS, CONNECTIONS, NOSECTION};
+typedef enum {BLOCK, IN, OUT, COMPONENTS, CONNECTIONS, NOSECTION} Section;
 
 char *trim(char *str);
-bool parseFile(char *filename, Block **database, int *dbCount);
+Block **parseFile(char *filename, Block **database, int dbCount, int *outCount);
 #endif
