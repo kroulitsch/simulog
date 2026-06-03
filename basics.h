@@ -40,18 +40,10 @@ Block **getBasics() {
 
     Block *nand = createBlock("NAND", 2, 1, 2, nandConns);
 
-    Pin **nandIns = nand->inputs;
-    Pin **nandOuts = nand->outputs;
-
-    for(int i = 0; i < 2; i++) {
-        nandIns[i]->block = nand;
-    }
-    nandOuts[0]->block = nand;
-
     connect(nandConns[0]->outputs[0], nandConns[1]->inputs[0]);
-    connect(nandIns[0], nandConns[0]->inputs[0]);
-    connect(nandIns[1], nandConns[0]->inputs[1]);
-    connect(nandConns[1]->outputs[0], nandOuts[0]);
+    connect(nand->inputs[0], nandConns[0]->inputs[0]);
+    connect(nand->inputs[1], nandConns[0]->inputs[1]);
+    connect(nandConns[1]->outputs[0], nand->outputs[0]);
 
     basics[NAND] = nand;
 

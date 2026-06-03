@@ -114,7 +114,7 @@ Block *createBlock(char *name, int iNum, int oNum, int compCount, Block **compon
     b->oNum = oNum;
     b->outputs = malloc(oNum * sizeof(Pin *));
     for (int i = 0; i < oNum; i++) {
-        b->outputs[i] = createPin(NULL, b, i, PTYPE_OUTPUT);
+        b->outputs[i] = createPin(NULL, b, i, PTYPE_BOTH);
     }
 
     b->basic = false;
@@ -231,7 +231,7 @@ void connect(Pin *from, Pin *to) {
     bool isFromValid = (from->type == PTYPE_OUTPUT || from->type == PTYPE_BOTH);
     bool isToValid   = (to->type == PTYPE_INPUT   || to->type == PTYPE_BOTH);
 
-    if(!isToValid && !isFromValid) {
+    if(!isToValid || !isFromValid) {
         fprintf(stderr, "Invalid connection at %s -> %s\n", from->block->name, to->block->name);
     }
 
