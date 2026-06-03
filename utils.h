@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <math.h>
 
-enum Basics {AND, NOT, BASICS_SIZE};
+enum Basics {AND, NOT, NAND, OR, BASICS_SIZE};
 
 struct block_t;
 

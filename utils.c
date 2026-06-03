@@ -143,6 +143,10 @@ void freeBlock(Block *b) {
     }
     free(b->components);
 
+    if (b->basic) {
+        freeOperation(b->op);
+    }
+
     free(b);
 }
 
@@ -152,7 +156,8 @@ void freeBlock(Block *b) {
  */
 Block *getInstance(Block *b) {
     if (b->basic) {
-        return createBasicBlock(b->iNum, b->op);
+        Operation *op = createOperation(b->op->name, b->op->func);
+        return createBasicBlock(b->iNum, op);
     }
 
     Block **newComps = malloc(b->compCount * sizeof(Block *));
