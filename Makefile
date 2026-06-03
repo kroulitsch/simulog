@@ -14,7 +14,7 @@ v: $(PROG)
 	valgrind --show-leak-kinds=all --leak-check=full ./$(PROG)
 
 clone:
-	cd .. && rm -rf simulog && git clone https://github.com/kroulitsch/simulog.git --branch master
+	cd .. && rm -rf simulog && git clone https://github.com/kroulitsch/simulog.git --branch main
 
 pull:
 	git pull
