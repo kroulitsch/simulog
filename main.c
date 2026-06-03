@@ -70,32 +70,34 @@ int main(/*int argc, char *argv[]*/) {
 
     int outCount = 0;
 
-    Block **parsedBlocks = parseFile("file_examples/ex1.simulog", basics, BASICS_SIZE, &outCount);
+    Block **parsedBlocks = parseFile("file_examples/ex2.simulog", basics, BASICS_SIZE, &outCount);
 
+    Block *xor = parsedBlocks[BASICS_SIZE];
 
-    if (verifyBlock(basics[OR], "00", "0") &&
-        verifyBlock(basics[OR], "10", "1") &&
-        verifyBlock(basics[OR], "01", "1") &&
-        verifyBlock(basics[OR], "11", "1")) {
-        printf("OR gate: PASSED\n");
+    draw(xor);
+    flip(xor->inputs[0], true);
+    draw(xor);
+    flip(xor->inputs[1], true);
+    draw(xor);
+    flip(xor->inputs[0], false);
+    draw(xor);
+
+    if (verifyBlock(xor, "00", "0") &&
+        verifyBlock(xor, "10", "1") &&
+        verifyBlock(xor, "01", "1") &&
+        verifyBlock(xor, "11", "0")) {
+        printf("XOR gate: PASSED\n");
     } else {
-        printf("OR gate: FAILED\n");
+        printf("XOR gate: FAILED\n");
     }
 
     // cleanup
-    if (parsedBlocks != NULL) {
-        for (int i = 0; i < outCount; i++) {
-            freeBlock(parsedBlocks[i]);
-        }
-        free(parsedBlocks);
+    for (int i = 0; i < outCount; i++) {
+        freeBlock(parsedBlocks[i]);
     }
+    free(parsedBlocks);
 
-    if (basics != NULL) {
-        // for (int i = 0; i < BASICS_SIZE; i++) {
-        //     freeBlock(basics[i]);
-        // }
-        free(basics);
-    }
+    free(basics);
 
     return 0;
 }

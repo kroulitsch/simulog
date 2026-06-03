@@ -15,7 +15,7 @@
  */
 Pin *createPin(char *name, Block *block, int id, PinType type) {
     Pin *p = malloc(sizeof(Pin));
-    p->name = name;
+    p->name = name ? strdup(name) : NULL;
     p->block = block;
     p->id = id;
     p->type = type;
@@ -37,8 +37,10 @@ Pin *createPin(char *name, Block *block, int id, PinType type) {
  */
 void setPinName(Block *b, PinType type, int index, char *name) {
     if(type == PTYPE_INPUT) {
+        if (b->inputs[index]->name) free(b->inputs[index]->name);
         b->inputs[index]->name = (name != NULL) ? strdup(name) : NULL;
     } else if(type == PTYPE_OUTPUT) {
+        if (b->outputs[index]->name) free(b->outputs[index]->name);
         b->outputs[index]->name = (name != NULL) ? strdup(name) : NULL;
     }
 }
@@ -74,6 +76,7 @@ Pin *getPin(Block *b, char *name) {
  */
 void freePin(Pin *p) {
     free(p->connTo);
+    if (p->name) free(p->name);
     free(p);
 }
 
@@ -87,7 +90,7 @@ void freePin(Pin *p) {
  */
 Operation *createOperation(char *name, bool (*function) (Pin *, Pin *)) {
     Operation *o = malloc(sizeof(Operation));
-    o->name = name;
+    o->name = name ? strdup(name) : NULL;
     o->func = function;
 
     return o;
@@ -98,6 +101,7 @@ Operation *createOperation(char *name, bool (*function) (Pin *, Pin *)) {
  * @param o Pointer to the operation to be freed.
  */
 void freeOperation(Operation *o) {
+    if (o->name) free(o->name);
     free(o);
 }
 
@@ -110,7 +114,7 @@ void freeOperation(Operation *o) {
  */
 Block *createBasicBlock(int iNum, Operation *oper) {
     Block *b = malloc(sizeof(Block));
-    b->name = oper->name;
+    b->name = (oper->name != NULL) ? strdup(oper->name) : NULL;
     b->iNum = iNum;
     b->inputs = malloc(iNum * sizeof(Pin *));
     for(int i = 0; i < iNum; i++) {
@@ -127,8 +131,6 @@ Block *createBasicBlock(int iNum, Operation *oper) {
     b->op = oper;
     b->compCount = 0;
     b->components = NULL;
-
-    // calculate(b);
 
     return b;
 }
@@ -179,6 +181,7 @@ void addComponent(Block *b, Block *component, char *name) {
         b->components = realloc(b->components, (b->compCount + 1) * sizeof(Block *));
     }
     
+    if (component->name) free(component->name);
     component->name = strdup(name);
     b->components[(b->compCount)++] = component;
 }
@@ -244,6 +247,7 @@ void freeBlock(Block *b) {
         freeOperation(b->op);
     }
 
+    if (b->name) free(b->name);
     free(b);
 }
 
@@ -257,11 +261,13 @@ Block *getInstance(Block *b) {
         Operation *op = createOperation(b->op->name, b->op->func);
         Block *newB = createBasicBlock(b->iNum, op);
         for (int i = 0; i < b->iNum; i++) {
-            newB->inputs[i]->name = b->inputs[i]->name;
+            if (newB->inputs[i]->name) free(newB->inputs[i]->name);
+            newB->inputs[i]->name = b->inputs[i]->name ? strdup(b->inputs[i]->name) : NULL;
         }
 
         for (int i = 0; i < b->oNum; i++) {
-            newB->outputs[i]->name = b->outputs[i]->name;
+            if (newB->outputs[i]->name) free(newB->outputs[i]->name);
+            newB->outputs[i]->name = b->outputs[i]->name ? strdup(b->outputs[i]->name) : NULL;
         }
 
         return newB;
@@ -274,11 +280,13 @@ Block *getInstance(Block *b) {
     }
 
     for (int i = 0; i < b->iNum; i++) {
-        newB->inputs[i]->name = b->inputs[i]->name;
+        if (newB->inputs[i]->name) free(newB->inputs[i]->name);
+        newB->inputs[i]->name = b->inputs[i]->name ? strdup(b->inputs[i]->name) : NULL;
     }
 
     for (int i = 0; i < b->oNum; i++) {
-        newB->outputs[i]->name = b->outputs[i]->name;
+        if (newB->outputs[i]->name) free(newB->outputs[i]->name);
+        newB->outputs[i]->name = b->outputs[i]->name ? strdup(b->outputs[i]->name) : NULL;
     }
 
     for (int i = 0; i < b->iNum; i++) {
@@ -318,7 +326,6 @@ Block *getInstance(Block *b) {
         }
     }
 
-    // calculate(newB);
     return newB;
 }
 
