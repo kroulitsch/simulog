@@ -7,27 +7,28 @@
 #include <stdio.h>
 #include <math.h>
 
-enum Basics {AND, NOT, NAND, OR, BASICS_SIZE};
+typedef enum {PTYPE_INPUT, PTYPE_OUTPUT, PTYPE_BOTH} PinType;
 
-struct block_t;
+typedef struct pin_t Pin;
+typedef struct block_t Block;
 
-typedef struct pin_t {
+struct pin_t {
     int id;
     char *name;
-    bool isInput;
+    PinType type;
     bool on;
-    struct block_t *block;
+    Block *block;
     int connCount;
-    struct pin_t **connTo;
-    struct pin_t *connFrom;
-} Pin;
+    Pin **connTo;
+    Pin *connFrom;
+};
 
 typedef struct oper_t {
     char *name;
     bool (*func) (Pin *, Pin *);
 } Operation;
 
-typedef struct block_t {
+struct block_t {
     char *name;
     int iNum;
     Pin **inputs;
@@ -36,10 +37,10 @@ typedef struct block_t {
     bool basic;
     Operation *op;
     int compCount;
-    struct block_t **components;
-} Block;
+    Block **components;
+};
 
-Pin *createPin(char *name, Block *block, int id, bool isInput);
+Pin *createPin(char *name, Block *block, int id, PinType type);
 void freePin(Pin *p);
 Operation *createOperation(char *name, bool (*function) (Pin *, Pin *));
 void freeOperation(Operation *o);

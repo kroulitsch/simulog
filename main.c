@@ -5,40 +5,32 @@ int main(/*int argc, char *argv[]*/) {
     Block **basics = getBasics();
 
     draw(basics[AND]);
-    // flip(basics[AND]->inputs[0], true);
-    // draw(basics[AND]);
-    // flip(basics[AND]->inputs[1], true);
-    // draw(basics[AND]);
-    // flip(basics[AND]->inputs[0], false);
-    // draw(basics[AND]);
-    // flip(basics[AND]->inputs[1], false);
-    // draw(basics[AND]);
+    flip(basics[AND]->inputs[0], true);
+    draw(basics[AND]);
+    flip(basics[AND]->inputs[1], true);
+    draw(basics[AND]);
+    flip(basics[AND]->inputs[0], false);
+    draw(basics[AND]);
 
     draw(basics[NOT]);
-    // flip(basics[NOT]->inputs[0], true);
-    // draw(basics[NOT]);
-    // flip(basics[NOT]->inputs[0], false);
-    // draw(basics[NOT]);
+    flip(basics[NOT]->inputs[0], true);
+    draw(basics[NOT]);
 
     draw(basics[NAND]);
-    // flip(nand->inputs[0], true);
-    // draw(nand);
-    // flip(nand->inputs[1], true);
-    // draw(nand);
-    // flip(nand->inputs[0], false);
-    // draw(nand);
-    // flip(nand->inputs[1], false);
-    // draw(nand);
+    flip(basics[NAND]->inputs[0], true);
+    draw(basics[NAND]);
+    flip(basics[NAND]->inputs[1], true);
+    draw(basics[NAND]);
+    flip(basics[NAND]->inputs[0], false);
+    draw(basics[NAND]);
 
     draw(basics[OR]);
-    // flip(or->inputs[0], true);
-    // draw(or);
-    // flip(or->inputs[1], true);
-    // draw(or);
-    // flip(or->inputs[0], false);
-    // draw(or);
-    // flip(or->inputs[1], false);
-    // draw(or);
+    flip(basics[OR]->inputs[0], true);
+    draw(basics[OR]);
+    flip(basics[OR]->inputs[1], true);
+    draw(basics[OR]);
+    flip(basics[OR]->inputs[0], false);
+    draw(basics[OR]);
 
     // cleanup
     for (int i = 0; i < BASICS_SIZE; i++) {

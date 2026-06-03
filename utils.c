@@ -5,15 +5,15 @@
  * @param name Name of the pin, paste NULL if not specified.
  * @param block Block that the pin is associated with.
  * @param id ID of the pin, can be any number.
- * @param isInput `true` if pin is an input pin, `false` if output pin.
+ * @param type Type of the pin, specified in PinType enum.
  * @returns Pointer to the created pin.
  */
-Pin *createPin(char *name, Block *block, int id, bool isInput) {
+Pin *createPin(char *name, Block *block, int id, PinType type) {
     Pin *p = malloc(sizeof(Pin));
     p->name = name;
     p->block = block;
     p->id = id;
-    p->isInput = isInput;
+    p->type = type;
     p->on = false;
     p->connCount = 0;
     p->connTo = malloc(sizeof(Pin *));
@@ -69,13 +69,13 @@ Block *createBasicBlock(int iNum, Operation *oper) {
     b->iNum = iNum;
     b->inputs = malloc(iNum * sizeof(Pin *));
     for(int i = 0; i < iNum; i++) {
-        b->inputs[i] = createPin(NULL, b, i, true);
+        b->inputs[i] = createPin(NULL, b, i, PTYPE_INPUT);
     }
 
     b->oNum = 1;
     b->outputs = malloc(b->oNum * sizeof(Pin *));
     for(int i = 0; i < b->oNum; i++) {
-        b->outputs[i] = createPin("OUT", b, i, false);
+        b->outputs[i] = createPin("OUT", b, i, PTYPE_OUTPUT);
     }
 
     b->basic = true;
@@ -108,13 +108,13 @@ Block *createBlock(char *name, int iNum, int oNum, int compCount, Block **compon
     b->iNum = iNum;
     b->inputs = malloc(iNum * sizeof(Pin *));
     for (int i = 0; i < iNum; i++) {
-        b->inputs[i] = createPin(NULL, b, i, true);
+        b->inputs[i] = createPin(NULL, b, i, PTYPE_BOTH);
     }
 
     b->oNum = oNum;
     b->outputs = malloc(oNum * sizeof(Pin *));
     for (int i = 0; i < oNum; i++) {
-        b->outputs[i] = createPin(NULL, b, i, false);
+        b->outputs[i] = createPin(NULL, b, i, PTYPE_OUTPUT);
     }
 
     b->basic = false;
@@ -228,6 +228,13 @@ void flip(Pin *p, bool on) {
  * @param to Input pin of the connection.
  */
 void connect(Pin *from, Pin *to) {
+    bool isFromValid = (from->type == PTYPE_OUTPUT || from->type == PTYPE_BOTH);
+    bool isToValid   = (to->type == PTYPE_INPUT   || to->type == PTYPE_BOTH);
+
+    if(!isToValid && !isFromValid) {
+        fprintf(stderr, "Invalid connection at %s -> %s\n", from->block->name, to->block->name);
+    }
+
     from->connTo[(from->connCount)++] = to;
     from->connTo = realloc(from->connTo, (from->connCount + 1) * sizeof(Pin *));
 

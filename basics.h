@@ -1,5 +1,7 @@
 #include "utils.h"
 
+enum Basics {AND, NOT, NAND, OR, BASICS_SIZE};
+
 /**
  * @brief Helper function that performs the `AND` operation.
  * @param a First pin.
