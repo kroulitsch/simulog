@@ -137,11 +137,11 @@ Block *createBasicBlock(int iNum, Operation *oper) {
  * @param components Array of component blocks pointers.
  * @returns Pointer to the created block.
  */
-Block *createBlock(char *name, int iNum, int oNum, int compCount, Block **components) {
+Block *createBlock(char *name, int iNum, int oNum) {
     Block *b = malloc(sizeof(Block));
     b->name = name;
-    b->compCount = compCount;
-    b->components = components;
+    b->compCount = 0;
+    b->components = NULL;
 
     b->iNum = iNum;
     b->inputs = malloc(iNum * sizeof(Pin *));
@@ -159,6 +159,28 @@ Block *createBlock(char *name, int iNum, int oNum, int compCount, Block **compon
     b->op = NULL;
     
     return b;
+}
+
+void addComponent(Block *b, Block *component, char *name) {
+    if(b->compCount == 0) {
+        b->components = malloc(sizeof(Block *));
+    } else {
+        b->components = realloc(b->components, (b->compCount + 1) * sizeof(Block *));
+    }
+    
+    component->name = name;
+    b->components[(b->compCount)++] = component;
+}
+
+Block *getComponent(Block *b, char *name) {
+    for(int i = 0; i < b->compCount; i++) {
+        if (strcmp(b->components[i]->name, name) == 0) {
+            return b->components[i];
+        }
+    }
+
+    fprintf(stderr, "Block %s doesn't have a component %s\n", b->name, name);
+    return NULL;
 }
 
 /**
@@ -208,12 +230,11 @@ Block *getInstance(Block *b) {
         return newB;
     }
 
-    Block **newComps = malloc(b->compCount * sizeof(Block *));
-    for (int i = 0; i < b->compCount; i++) {
-        newComps[i] = getInstance(b->components[i]);
-    }
+    Block *newB = createBlock(b->name, b->iNum, b->oNum);
 
-    Block *newB = createBlock(b->name, b->iNum, b->oNum, b->compCount, newComps);
+    for (int i = 0; i < b->compCount; i++) {
+        addComponent(newB, getInstance(b->components[i]), b->components[i]->name);
+    }
 
     for (int i = 0; i < b->iNum; i++) {
         newB->inputs[i]->name = b->inputs[i]->name;
@@ -376,7 +397,7 @@ void draw(Block *b) {
         }
 
         if(drawIn) {
-            printf("(%c)", b->inputs[iNum++]->on ? '*' : ' ');
+            printf("(%c)", b->inputs[iNum++]->on ? '@' : ' ');
         } else {
             printf(" | ");
         }
@@ -419,7 +440,7 @@ void draw(Block *b) {
         }
 
         if(drawOut) {
-            printf("(%c)", b->outputs[oNum++]->on ? '*' : ' ');
+            printf("(%c)", b->outputs[oNum++]->on ? '@' : ' ');
         } else {
             printf(" | ");
         }

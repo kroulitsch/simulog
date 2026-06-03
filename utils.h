@@ -49,8 +49,10 @@ Operation *createOperation(char *name, bool (*function) (Pin *, Pin *));
 void freeOperation(Operation *o);
 
 Block *createBasicBlock(int iNum, Operation *oper);
-Block *createBlock(char *name, int iNum, int oNum, int compCount, Block **components);
+Block *createBlock(char *name, int iNum, int oNum);
 Block *getInstance(Block *b);
+void addComponent(Block *b, Block *component, char *name);
+Block *getComponent(Block *b, char *name);
 void freeBlock(Block *b);
 
 void connect(Pin *from, Pin *to);

@@ -37,42 +37,37 @@ Block **getBasics() {
     setPinName(basics[NOT], PTYPE_INPUT, 0, "IN");
 
     // nand
-    Block **nandConns = (Block **)malloc(2 * sizeof(Block *));
-    nandConns[0] = getInstance(basics[AND]);
-    nandConns[1] = getInstance(basics[NOT]);
 
-    Block *nand = createBlock("NAND", 2, 1, 2, nandConns);
+    Block *nand = createBlock("NAND", 2, 1);
     setPinName(nand, PTYPE_INPUT, 0, "IN1");
     setPinName(nand, PTYPE_INPUT, 1, "IN2");
-    setPinName(nand, PTYPE_OUTPUT, 0, "OUT"); 
+    setPinName(nand, PTYPE_OUTPUT, 0, "OUT");
+
+    addComponent(nand, getInstance(basics[AND]), "AND");
+    addComponent(nand, getInstance(basics[NOT]), "NOT");
 
     basics[NAND] = nand;
 
-    connect(getPin(nandConns[0], "OUT"), getPin(nandConns[1], "IN"));
-    connect(getPin(nand, "IN1"), getPin(nandConns[0], "IN1"));
-    connect(getPin(nand, "IN2"), getPin(nandConns[0], "IN2"));
-    connect(getPin(nandConns[1], "OUT"), getPin(nand, "OUT"));
+    connect(getPin(nand, "IN1"), getPin(getComponent(nand, "AND"), "IN1"));
+    connect(getPin(nand, "IN2"), getPin(getComponent(nand, "AND"), "IN2"));
+    connect(getPin(getComponent(nand, "AND"), "OUT"), getPin(getComponent(nand, "NOT"), "IN"));
+    connect(getPin(getComponent(nand, "NOT"), "OUT"), getPin(nand, "OUT"));
 
     // or
-    Block *not1 = getInstance(basics[NOT]);
-    Block *not2 = getInstance(basics[NOT]);
-    Block *nand1 = getInstance(basics[NAND]); 
-
-    Block **orComps = (Block **)malloc(3 * sizeof(Block *));
-    orComps[0] = not1;
-    orComps[1] = not2;
-    orComps[2] = nand1;
-
-    Block *or = createBlock("OR", 2, 1, 3, orComps);
+    Block *or = createBlock("OR", 2, 1);
     setPinName(or, PTYPE_INPUT, 0, "IN1");
     setPinName(or, PTYPE_INPUT, 1, "IN2");
     setPinName(or, PTYPE_OUTPUT, 0, "OUT"); 
 
-    connect(getPin(or, "IN1"), getPin(not1, "IN"));
-    connect(getPin(or, "IN2"), getPin(not2, "IN"));
-    connect(getPin(not1, "OUT"), getPin(nand1, "IN1"));
-    connect(getPin(not2, "OUT"), getPin(nand1, "IN2"));
-    connect(getPin(nand1, "OUT"), getPin(or, "OUT"));
+    addComponent(or, getInstance(basics[NOT]), "NOT1");
+    addComponent(or, getInstance(basics[NOT]), "NOT2");
+    addComponent(or, getInstance(basics[NAND]), "NAND");
+
+    connect(getPin(or, "IN1"), getPin(getComponent(or, "NOT1"), "IN"));
+    connect(getPin(or, "IN2"), getPin(getComponent(or, "NOT2"), "IN"));
+    connect(getPin(getComponent(or, "NOT1"), "OUT"), getPin(getComponent(or, "NAND"), "IN1"));
+    connect(getPin(getComponent(or, "NOT2"), "OUT"), getPin(getComponent(or, "NAND"), "IN2"));
+    connect(getPin(getComponent(or, "NAND"), "OUT"), getPin(or, "OUT"));
 
     basics[OR] = or;
 
