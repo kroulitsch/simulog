@@ -95,11 +95,8 @@ block: XOR
 As a part of the `parseFile` function call, the database array of existing blocks is passed optionally, from which the components can be referenced. If a `NULL` pointer is passed or `the dbCount` is passed as `0`, the database of basic functions is imported and used. The function returns an array of the parsed and database blocks as one combined array.
 
 ## Future works
-
-In the current state, the library contains the three main structures and their corresponding functions. The pin state calculation is performed recursively upon each input change, therefore in the more complex scenarios some blocks can be recomputed many times over and over, slowing down the simulation.
-
 Planned future updates include:
-* **Calculation optimization:** As referenced above, calculation update and optimization could improve the simulation performance and enable cycles in the circuits.
+* **Cycles handling:** Currently the calculation only allows acyclic circuits, adding cycles support would unlock new possibilities, including sequential circuits.
 * **Graphic visualization:** Graphic front-end for better visualization and easier manipulation of the blocks.
 * **Multi-bit pins support:** Pins that represent a binary number rather than just two states. This could make working with bigger units, such as a memory unit easier.
 
