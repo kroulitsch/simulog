@@ -84,3 +84,44 @@ bool verifyBlock(Block *b, char *inputs, char *outputs) {
 
     return true;
 }
+
+void drawTruthTable(Block *b) {
+    printf("\n");
+
+    printf("Truth table: %s\n", b->name ? b->name : "Unnamed block");
+    for (int i = 0; i < b->iNum; i++) {
+        printf("%s ", b->inputs[i]->name ? b->inputs[i]->name : "IN");
+    }
+    printf("| ");
+    for (int i = 0; i < b->oNum; i++) {
+        printf("%s ", b->outputs[i]->name ? b->outputs[i]->name : "OUT");
+    }
+    printf("\n");
+
+    for (int i = 0; i < (b->iNum * 4) + (b->oNum * 5); i++) printf("-");
+    printf("\n");
+
+    int rowCount = 1 << b->iNum;
+    for (int row = rowCount - 1; row >= 0; row--) {
+
+    for(int i = 0; i < b->iNum; i++) {
+        bool state = (row >> (b->iNum - 1 - i)) & 1;
+        flip(b->inputs[i], state);
+    }
+
+    calculate(b);
+
+    for (int i = 0; i < b->iNum; i++) {
+            int len = b->inputs[i]->name ? strlen(b->inputs[i]->name) : 2;
+            printf("%*d ", len, b->inputs[i]->on);
+        }
+        printf("| ");
+        for (int i = 0; i < b->oNum; i++) {
+            int len = b->outputs[i]->name ? strlen(b->outputs[i]->name) : 3;
+            printf("%*d ", len, b->outputs[i]->on);
+        }
+        printf("\n");
+    }
+
+    printf("\n");
+}

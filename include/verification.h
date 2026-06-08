@@ -4,5 +4,6 @@
 
 bool setInputs(Block *b, char *values);
 bool verifyBlock(Block *b, char *inputs, char *outputs);
+void drawTruthTable(Block *b);
 
 #endif

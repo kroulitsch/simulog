@@ -23,6 +23,8 @@ int main(/*int argc, char *argv[]*/) {
         printf("AND gate: FAILED\n");
     }
 
+    drawTruthTable(basics[AND]);
+
     draw(basics[NOT]);
     flip(basics[NOT]->inputs[0], true);
     draw(basics[NOT]);
@@ -33,6 +35,8 @@ int main(/*int argc, char *argv[]*/) {
     } else {
         printf("NOT gate: FAILED\n");
     }
+
+    drawTruthTable(basics[NOT]);
 
     draw(basics[NAND]);
     flip(basics[NAND]->inputs[0], true);
@@ -51,6 +55,8 @@ int main(/*int argc, char *argv[]*/) {
         printf("NAND gate: FAILED\n");
     }
 
+    drawTruthTable(basics[NAND]);
+
     draw(basics[OR]);
     flip(basics[OR]->inputs[0], true);
     draw(basics[OR]);
@@ -67,6 +73,8 @@ int main(/*int argc, char *argv[]*/) {
     } else {
         printf("OR gate: FAILED\n");
     }
+
+    drawTruthTable(basics[OR]);
 
     int outCount = 0;
 
@@ -90,6 +98,8 @@ int main(/*int argc, char *argv[]*/) {
     } else {
         printf("XOR gate: FAILED\n");
     }
+
+    drawTruthTable(xor);
 
     // cleanup
     for (int i = 0; i < outCount; i++) {
