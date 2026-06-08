@@ -208,6 +208,7 @@ Block *getComponent(Block *b, char *name) {
  * @brief This function performs the Kahn's algorithm that sorts block's components topologically
  * for easy linear output calculation.
  * @param b Block with components to be sorted.
+ * @returns Boolean value, basically a cycle detection check, `true` if the circuit is acyclic, `false` if a cycle has been detected.
  */
 bool sortComponents(Block *b) {
     if (b->basic || b->compCount == 0) return true;
