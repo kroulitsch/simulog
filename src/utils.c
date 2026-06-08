@@ -203,6 +203,80 @@ Block *getComponent(Block *b, char *name) {
     return NULL;
 }
 
+
+/**
+ * @brief This function performs the Kahn's algorithm that sorts block's components topologically
+ * for easy linear output calculation.
+ * @param b Block with components to be sorted.
+ */
+bool sortComponents(Block *b) {
+    if (b->basic || b->compCount == 0) return true;
+
+    int *indegree = calloc(b->compCount, sizeof(int));
+
+    Block **queue = malloc(b->compCount * sizeof(Block *));
+    int qHead = 0;
+    int qTail = 0;
+
+    Block **sorted = malloc(b->compCount * sizeof(Block *));
+    int sortedCount = 0;
+
+    for (int i = 0; i < b->compCount; i++) {
+        Block *comp = b->components[i];
+        for (int p = 0; p < comp->iNum; p++) {
+            Pin *inPin = comp->inputs[p];
+            if (inPin->connFrom != NULL) {
+                Block *sourceBlock = inPin->connFrom->block;
+                if (sourceBlock != b) {
+                    indegree[i]++;
+                }
+            }
+        }
+
+        if (indegree[i] == 0) {
+            queue[qTail++] = comp;
+        }
+    }
+
+    while (qHead < qTail) {
+        Block *current = queue[qHead++];
+        sorted[sortedCount++] = current;
+
+        for (int p = 0; p < current->oNum; p++) {
+            Pin *outPin = current->outputs[p];
+            for (int c = 0; c < outPin->connCount; c++) {
+                Block *targetBlock = outPin->connTo[c]->block;
+
+                if (targetBlock != b) {
+                    for (int k = 0; k < b->compCount; k++) {
+                        if (b->components[k] == targetBlock) {
+                            indegree[k]--;
+
+                            if (indegree[k] == 0) {
+                                queue[qTail++] = targetBlock;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    free(indegree);
+    free(queue);
+
+    if (sortedCount != b->compCount) {
+        fprintf(stderr, "Cycle detected in block %s\n", b->name ? b->name : "Unnamed block");
+        free(sorted);
+        return false;
+    }
+
+    free(b->components);
+    b->components = sorted;
+    return true;
+}
+
 /**
  * @brief This function gets a block from an array of `blocks` by its `name`.
  * @param blocks Array of blocks to be searched in.
@@ -326,6 +400,7 @@ Block *getInstance(Block *b) {
         }
     }
 
+    sortComponents(newB);
     return newB;
 }
 

@@ -291,6 +291,7 @@ Block **parseFile(char *filename, Block **database, int dbCount, int *outCount) 
             capacity *= 2;
             db = realloc(db, capacity * sizeof(Block *));
         }
+        sortComponents(currentBlock);
         db[count++] = currentBlock;
         currentBlock = NULL;
     }

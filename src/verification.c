@@ -85,6 +85,10 @@ bool verifyBlock(Block *b, char *inputs, char *outputs) {
     return true;
 }
 
+/**
+ * @brief This function computes a truth table of a block and prints it.
+ * @param b Block to be computed with.
+ */
 void drawTruthTable(Block *b) {
     printf("\n");
 

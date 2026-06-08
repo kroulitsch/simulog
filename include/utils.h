@@ -53,6 +53,7 @@ Block *createBlock(char *name, int iNum, int oNum);
 Block *getInstance(Block *b);
 void addComponent(Block *b, Block *component, char *name);
 Block *getComponent(Block *b, char *name);
+bool sortComponents(Block *b);
 Block *getBlock(Block **blocks, int blockCount, char *name);
 void freeBlock(Block *b);
 
