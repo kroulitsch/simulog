@@ -1,6 +1,6 @@
 # Simulog
 
-Simulog is a digital logic simulator written in C. It allows users to build, interconnect, simulate and visualize digital circuits ranging from basic logic gates (AND, NOT) to complex composite blocks.
+Simulog is a digital logic library written in C. It allows users to build, interconnect, simulate and visualize digital circuits ranging from basic logic gates (AND, NOT) to complex composite blocks.
 
 ## Implementation details
 
