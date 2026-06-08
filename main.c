@@ -101,6 +101,9 @@ int main(/*int argc, char *argv[]*/) {
 
     drawTruthTable(xor);
 
+    exportToDot(xor, "xor.dot");
+    exportToDot(getComponent(xor, "OR_FINAL"), "or_final.dot");
+
     // cleanup
     for (int i = 0; i < outCount; i++) {
         freeBlock(parsedBlocks[i]);

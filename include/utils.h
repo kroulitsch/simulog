@@ -64,5 +64,6 @@ void flip(Pin *p, bool on);
 void calculate(Block *b);
 
 void draw(Block *b);
+void exportToDot(Block *b, const char *filename);
 
 #endif

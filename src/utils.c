@@ -608,3 +608,80 @@ void draw(Block *b) {
 
     printf("\n");
 }
+
+/**
+ * @brief This function exports a block and its components' representation into .dot format.
+ */
+void exportToDot(Block *b, const char *filename) {
+    FILE *f = fopen(filename, "w");
+    if (!f) {
+        fprintf(stderr, "Cannot open %s for writing\n", filename);
+        return;
+    }
+
+    fprintf(f, "digraph \"%s\" {\n", b->name ? b->name : "Unnamed block");
+    fprintf(f, "    rankdir=LR;\n");
+
+    fprintf(f, "    nodesep=0.8;\n");
+    fprintf(f, "    ranksep=1.5;\n");
+    fprintf(f, "    splines=ortho;\n");
+
+    fprintf(f, "    node [fontname=\"Arial\", shape=box, style=filled];\n");
+    fprintf(f, "    edge [fontname=\"Arial\", fontsize=10, fontcolor=\"#555555\"];\n\n");
+
+    fprintf(f, "    { rank=source;\n");
+    for (int i = 0; i < b->iNum; i++) {
+        Pin *in = b->inputs[i];
+        fprintf(f, "    pin_%s [shape=cds, fillcolor=\"#ffcccc\", label=\"%s\"];\n", 
+                in->name ? in->name : "", in->name ? in->name : "");
+    }
+    fprintf(f, "    }\n\n");
+
+    fprintf(f, "    { rank=sink;\n");
+    for (int i = 0; i < b->oNum; i++) {
+        Pin *out = b->outputs[i];
+        fprintf(f, "    pin_%s [shape=cds, fillcolor=\"#ccffcc\", label=\"%s\"];\n", 
+                out->name ? out->name : "", out->name ? out->name : "");
+    }
+    fprintf(f, "    }\n\n");
+
+    for (int i = 0; i < b->compCount; i++) {
+        Block *comp = b->components[i];
+        fprintf(f, "    comp_%s [fillcolor=\"#ccccff\", label=\"%s\"];\n", 
+                comp->name ? comp->name : "", comp->name ? comp->name : "");
+    }
+
+    for (int i = 0; i < b->iNum; i++) {
+        Pin *in = b->inputs[i];
+        for (int c = 0; c < in->connCount; c++) {
+            Pin *target = in->connTo[c];
+            if (target->block == b) {
+                fprintf(f, "    pin_%s -> pin_%s;\n", in->name ? in->name : "", target->name ? target->name : "");
+            } else {
+                fprintf(f, "    pin_%s -> comp_%s [headlabel=\"%s\"];\n", 
+                        in->name ? in->name : "", target->block->name ? target->block->name : "", target->name ? target->name : "");
+            }
+        }
+    }
+
+    for (int i = 0; i < b->compCount; i++) {
+        Block *comp = b->components[i];
+        for (int o = 0; o < comp->oNum; o++) {
+            Pin *out = comp->outputs[o];
+            for (int c = 0; c < out->connCount; c++) {
+                Pin *target = out->connTo[c];
+                if (target->block == b) {
+                    fprintf(f, "    comp_%s -> pin_%s [taillabel=\"%s\"];\n", 
+                            comp->name ? comp->name : "", target->name ? target->name : "", out->name ? out->name : "");
+                } else {
+                    fprintf(f, "    comp_%s -> comp_%s [taillabel=\"%s\", headlabel=\"%s\"];\n", 
+                            comp->name ? comp->name : "", target->name ? target->block->name : "", 
+                            out->name ? out->name : "", target->name ? target->name : "");
+                }
+            }
+        }
+    }
+
+    fprintf(f, "}\n");
+    fclose(f);
+}
