@@ -31,7 +31,7 @@ pull:
 	git pull
 
 clean:
-	rm -f $(PROG) $(OBJS)
+	rm -f $(PROG) $(OBJS) *.dot
 
 run: $(PROG)
 	./$(PROG)
