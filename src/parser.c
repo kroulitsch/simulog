@@ -1,7 +1,7 @@
+#define _POSIX_C_SOURCE 200809L
+
 #include "parser.h"
 #include "basics.h"
-
-#define _POSIX_C_SOURCE 200809L
 
 /**
  * @brief This function removes any leading or trailing whitespaces of the `str` string.
@@ -66,6 +66,7 @@ static Block **parseStream(FILE *file, Block **database, int dbCount, int *outCo
     Block **db = malloc(capacity * sizeof(Block *));
 
     for(int i = 0; i < dbCount; i++) {
+        sortComponents(currentBlock);
         db[count++] = database[i];
     }
 

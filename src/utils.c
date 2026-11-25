@@ -685,3 +685,16 @@ void exportToDot(Block *b, const char *filename) {
     fprintf(f, "}\n");
     fclose(f);
 }
+
+/**
+ * @brief This function correctly frees allocated memory of a block database `db`
+ * @param db Database of blocks
+ * @param count Number of allocated blocks in the database.
+ */
+void freeDatabase(Block **db, int count) {
+    if (!db) return;
+    for (int i = 0; i < count; i++) {
+        if (db[i]) freeBlock(db[i]);
+    }
+    free(db);
+}

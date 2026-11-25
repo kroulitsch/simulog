@@ -66,4 +66,6 @@ void calculate(Block *b);
 void draw(Block *b);
 void exportToDot(Block *b, const char *filename);
 
+void freeDatabase(Block **db, int count);
+
 #endif
