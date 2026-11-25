@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 #define connect sys_socket_connect
 #include <unistd.h>
@@ -17,12 +18,89 @@
 #define PORT 8080
 #define BUFFER_SIZE 8192
 
-void send_response(int client_fd, const char *status, const char *json_body) {
+static volatile sig_atomic_t running = 1;
 
+void send_response(int client_fd, const char *status, const char *json_body) {
+    char header[512];
+    size_t body_len = json_body ? strlen(json_body) : 0;
+
+    // header assembly
+    int header_len = snprintf(header, sizeof(header),
+        "HTTP/1.1 %s\r\n"
+        "Content-Type: application/json\r\n"
+        "Content-Length: %zu\r\n"
+        "Access-Control-Allow-Origin: *\r\n"
+        "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+        "Access-Control-Allow-Headers: Content-Type\r\n"
+        "Connection: close\r\n"
+        "\r\n",
+        status, body_len);
+
+    // write header
+    if (header_len > 0) {
+        write(client_fd, header, (size_t)header_len);
+    }
+
+    // write body
+    if (body_len > 0) {
+        write(client_fd, json_body, body_len);
+    }
 }
 
 void handle_request(int client_fd, const char *raw_request) {
+    char method[16] = {0};
+    char endpoint[256] = {0};
 
+    // scan method and endpoint
+    if (sscanf(raw_request, "%15s %255s", method, endpoint) != 2) {
+        send_response(client_fd, "400 Bad Request", "{\"error\":\"Invalid request\"}");
+        return;
+    }
+
+    // dismiss query parameters
+    char *query = strchr(endpoint, '?');
+    if (query) {
+        *query = '\0';
+    }
+
+    // if OPTIONS, send response 204
+    if (strcmp(method, "OPTIONS") == 0) {
+        send_response(client_fd, "204 No Content", "");
+        return;
+    }
+
+    // get body start
+    const char *body = strstr(raw_request, "\r\n\r\n");
+    if (body) {
+        body += 4;
+    }
+
+    // stop API server
+    if (strcmp(method, "POST") == 0 && strcmp(endpoint, "/stop") == 0) {
+        send_response(client_fd, "200 OK", NULL);
+        running = 0;
+        return;
+    }
+
+    // example test GET endpoint
+    if (strcmp(method, "GET") == 0 && strcmp(endpoint, "/status") == 0) {
+        send_response(client_fd, "200 OK", NULL);
+        return;
+    }
+
+    // example test POST endpoint
+    if (strcmp(method, "POST") == 0 && strcmp(endpoint, "/simulate") == 0) {
+        if (!body || body[0] == '\0') {
+            send_response(client_fd, "400 Bad Request", "{\"error\":\"Request body missing\"}");
+            return;
+        }
+
+        send_response(client_fd, "200 OK", NULL);
+        return;
+    }
+
+    // non-existent endpoint
+    send_response(client_fd, "404 Not Found", "{\"error\":\"Endpoint not found\"}");
 }
 
 int main(/*int argc, char *argv[]*/) {
@@ -51,10 +129,10 @@ int main(/*int argc, char *argv[]*/) {
         return 1;
     }
 
-    printf("Server posloucha na http://localhost:%d\n", PORT);
+    printf("Server listening on http://localhost:%d\n", PORT);
 
     char buffer[BUFFER_SIZE];
-    while (1) {
+    while (running) {
         int client_fd = accept(server_fd, NULL, NULL);
         if (client_fd < 0) continue;
 
