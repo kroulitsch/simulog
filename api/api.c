@@ -21,10 +21,10 @@
 static volatile sig_atomic_t running = 1;
 
 /**
- * @brief Function to send a HTTP response
- * @param clientFd Socket to send the response through
- * @param status Response status, for example 200 OK or 404 Not Found
- * @param jsonBody
+ * @brief Function to send a HTTP response.
+ * @param clientFd Socket to send the response through.
+ * @param status Response status, for example 200 OK or 404 Not Found.
+ * @param jsonBody Response body in JSON format.
  */
 void sendResponse(int clientFd, const char *status, const char *jsonBody) {
     char header[512];
@@ -53,6 +53,11 @@ void sendResponse(int clientFd, const char *status, const char *jsonBody) {
     }
 }
 
+/**
+ * @brief Function to handle a HTTP request.
+ * @param clientFd Socket to send a response through.
+ * @param rawRequest Unparsed HTTP request, will be parsed inside this function.
+ */
 void handleRequest(int clientFd, const char *rawRequest) {
     char method[16] = {0};
     char endpoint[256] = {0};

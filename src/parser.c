@@ -41,6 +41,7 @@ char *trim(char *str) {
  * already defined blocks.
  * @param dbCount Size of the database upon call of this function, will be modified according to the
  * number of parsed blocks.
+ * @param outCount New size of the database, incrementing the `dbCount` by a number of parsed blocks.
  */
 Block **parseFile(char *filename, Block **database, int dbCount, int *outCount) {
     FILE *file = fopen(filename, "r");
