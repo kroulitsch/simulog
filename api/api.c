@@ -20,12 +20,18 @@
 
 static volatile sig_atomic_t running = 1;
 
-void send_response(int client_fd, const char *status, const char *json_body) {
+/**
+ * @brief Function to send a HTTP response
+ * @param clientFd Socket to send the response through
+ * @param status Response status, for example 200 OK or 404 Not Found
+ * @param jsonBody
+ */
+void sendResponse(int clientFd, const char *status, const char *jsonBody) {
     char header[512];
-    size_t body_len = json_body ? strlen(json_body) : 0;
+    size_t bodyLen = jsonBody ? strlen(jsonBody) : 0;
 
     // header assembly
-    int header_len = snprintf(header, sizeof(header),
+    int headerLen = snprintf(header, sizeof(header),
         "HTTP/1.1 %s\r\n"
         "Content-Type: application/json\r\n"
         "Content-Length: %zu\r\n"
@@ -34,26 +40,26 @@ void send_response(int client_fd, const char *status, const char *json_body) {
         "Access-Control-Allow-Headers: Content-Type\r\n"
         "Connection: close\r\n"
         "\r\n",
-        status, body_len);
+        status, bodyLen);
 
     // write header
-    if (header_len > 0) {
-        write(client_fd, header, (size_t)header_len);
+    if (headerLen > 0) {
+        write(clientFd, header, (size_t)headerLen);
     }
 
     // write body
-    if (body_len > 0) {
-        write(client_fd, json_body, body_len);
+    if (bodyLen > 0) {
+        write(clientFd, jsonBody, bodyLen);
     }
 }
 
-void handle_request(int client_fd, const char *raw_request) {
+void handleRequest(int clientFd, const char *rawRequest) {
     char method[16] = {0};
     char endpoint[256] = {0};
 
     // scan method and endpoint
-    if (sscanf(raw_request, "%15s %255s", method, endpoint) != 2) {
-        send_response(client_fd, "400 Bad Request", "{\"error\":\"Invalid request\"}");
+    if (sscanf(rawRequest, "%15s %255s", method, endpoint) != 2) {
+        sendResponse(clientFd, "400 Bad Request", "{\"error\":\"Invalid request\"}");
         return;
     }
 
@@ -65,53 +71,53 @@ void handle_request(int client_fd, const char *raw_request) {
 
     // if OPTIONS, send response 204
     if (strcmp(method, "OPTIONS") == 0) {
-        send_response(client_fd, "204 No Content", "");
+        sendResponse(clientFd, "204 No Content", "");
         return;
     }
 
     // get body start
-    const char *body = strstr(raw_request, "\r\n\r\n");
+    const char *body = strstr(rawRequest, "\r\n\r\n");
     if (body) {
         body += 4;
     }
 
     // stop API server
     if (strcmp(method, "POST") == 0 && strcmp(endpoint, "/stop") == 0) {
-        send_response(client_fd, "200 OK", NULL);
+        sendResponse(clientFd, "200 OK", NULL);
         running = 0;
         return;
     }
 
     // example test GET endpoint
     if (strcmp(method, "GET") == 0 && strcmp(endpoint, "/status") == 0) {
-        send_response(client_fd, "200 OK", NULL);
+        sendResponse(clientFd, "200 OK", NULL);
         return;
     }
 
     // example test POST endpoint
     if (strcmp(method, "POST") == 0 && strcmp(endpoint, "/simulate") == 0) {
         if (!body || body[0] == '\0') {
-            send_response(client_fd, "400 Bad Request", "{\"error\":\"Request body missing\"}");
+            sendResponse(clientFd, "400 Bad Request", "{\"error\":\"Request body missing\"}");
             return;
         }
 
-        send_response(client_fd, "200 OK", NULL);
+        sendResponse(clientFd, "200 OK", NULL);
         return;
     }
 
     // non-existent endpoint
-    send_response(client_fd, "404 Not Found", "{\"error\":\"Endpoint not found\"}");
+    sendResponse(clientFd, "404 Not Found", "{\"error\":\"Endpoint not found\"}");
 }
 
 int main(/*int argc, char *argv[]*/) {
-    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_fd < 0) {
+    int serverFd = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverFd < 0) {
         perror("socket");
         return 1;
     }
 
     int opt = 1;
-    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
     struct sockaddr_in addr = {
         .sin_family = AF_INET,
@@ -119,12 +125,12 @@ int main(/*int argc, char *argv[]*/) {
         .sin_port = htons(PORT)
     };
 
-    if (bind(server_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    if (bind(serverFd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         perror("bind");
         return 1;
     }
 
-    if (listen(server_fd, 10) < 0) {
+    if (listen(serverFd, 10) < 0) {
         perror("listen");
         return 1;
     }
@@ -133,17 +139,18 @@ int main(/*int argc, char *argv[]*/) {
 
     char buffer[BUFFER_SIZE];
     while (running) {
-        int client_fd = accept(server_fd, NULL, NULL);
-        if (client_fd < 0) continue;
+        int clientFd = accept(serverFd, NULL, NULL);
+        if (clientFd < 0) continue;
 
         memset(buffer, 0, BUFFER_SIZE);
-        ssize_t bytes_read = read(client_fd, buffer, BUFFER_SIZE - 1);
-        if (bytes_read > 0) {
-            handle_request(client_fd, buffer);
+        ssize_t bytesRead = read(clientFd, buffer, BUFFER_SIZE - 1);
+        if (bytesRead > 0) {
+            handleRequest(clientFd, buffer);
         }
 
-        close(client_fd);
+        close(clientFd);
     }
 
-    close(server_fd);
+    close(serverFd);
+    printf("Server closed\n");
 }
