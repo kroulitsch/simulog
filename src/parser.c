@@ -1,6 +1,8 @@
 #include "parser.h"
 #include "basics.h"
 
+#define _POSIX_C_SOURCE 200809L
+
 /**
  * @brief This function removes any leading or trailing whitespaces of the `str` string.
  * @param str String to be trimmed.
@@ -35,22 +37,15 @@ char *trim(char *str) {
 }
 
 /**
- * @brief This function parses the block definitions in .simulog file into the `database`.
- * @param filename Name of the .simulog file with the definitions.
+ * @brief Function to parse a specified FILE * stream.
+ * @param file FILE * stream to be parsed.
  * @param database Database where the parsed blocks will be stored. It can be filled with
  * already defined blocks.
  * @param dbCount Size of the database upon call of this function, will be modified according to the
  * number of parsed blocks.
  * @param outCount New size of the database, incrementing the `dbCount` by a number of parsed blocks.
  */
-Block **parseFile(char *filename, Block **database, int dbCount, int *outCount) {
-    FILE *file = fopen(filename, "r");
-
-    if (file == NULL) {
-        fprintf(stderr, "Cannot open the file '%s'\n", filename);
-        return NULL;
-    }
-
+static Block **parseStream(FILE *file, Block **database, int dbCount, int *outCount) {
     Section section = NOSECTION;
     char line[256];
     int lineCount = 0;
@@ -301,4 +296,49 @@ Block **parseFile(char *filename, Block **database, int dbCount, int *outCount) 
 
     *outCount = count;
     return db;
+}
+
+
+/**
+ * @brief This function parses the block definitions in .simulog file into the `database`.
+ * @param filename Name of the .simulog file with the definitions.
+ * @param database Database where the parsed blocks will be stored. It can be filled with
+ * already defined blocks.
+ * @param dbCount Size of the database upon call of this function, will be modified according to the
+ * number of parsed blocks.
+ * @param outCount New size of the database, incrementing the `dbCount` by a number of parsed blocks.
+ */
+Block **parseFile(char *filename, Block **database, int dbCount, int *outCount) {
+    FILE *file = fopen(filename, "r");
+
+    if (file == NULL) {
+        fprintf(stderr, "Cannot open the file '%s'\n", filename);
+        return NULL;
+    }
+
+    return parseStream(file, database, dbCount, outCount);
+}
+
+/**
+ * @brief This function parses the block definitions in `source` string into the `database`.
+ * @param source String to be parsed.
+ * @param database Database where the parsed blocks will be stored. It can be filled with
+ * already defined blocks.
+ * @param dbCount Size of the database upon call of this function, will be modified according to the
+ * number of parsed blocks.
+ * @param outCount New size of the database, incrementing the `dbCount` by a number of parsed blocks.
+ */
+Block **parseString(const char *source, Block **database, int dbCount, int *outCount) {
+    if (source == NULL || source[0] == '\0') {
+        fprintf(stderr, "Cannot parse empty string\n");
+        return NULL;
+    }
+
+    FILE *stream = fmemopen((void *)source, strlen(source), "r");
+    if (stream == NULL) {
+        perror("fmemopen");
+        return NULL;
+    }
+
+    return parseStream(stream, database, dbCount, outCount);
 }
