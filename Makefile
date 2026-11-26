@@ -18,6 +18,8 @@ MAIN_OBJS = $(PROG).o $(SRC_OBJS)
 API_OBJS = $(APIDIR)/api.o $(SRC_OBJS) $(THIRD_OBJS)
 H_FILES = $(wildcard $(INCDIR)/*.h) $(wildcard $(APIDIR)/*.h) $(wildcard $(THIRDDIR)/*.h)
 
+DATABASE = database.simulog
+
 all: $(PROG)
 
 $(PROG): $(MAIN_OBJS)
@@ -44,7 +46,7 @@ v: $(PROG)
 	valgrind --show-leak-kinds=all --leak-check=full ./$(PROG)
 
 clean:
-	rm -f $(PROG) $(API) $(MAIN_OBJS) $(API_OBJS) *.dot
+	rm -f $(PROG) $(API) $(MAIN_OBJS) $(API_OBJS) *.dot $(DATABASE)
 
 run: $(PROG)
 	./$(PROG)

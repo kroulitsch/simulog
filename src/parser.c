@@ -66,7 +66,6 @@ static Block **parseStream(FILE *file, Block **database, int dbCount, int *outCo
     Block **db = malloc(capacity * sizeof(Block *));
 
     for(int i = 0; i < dbCount; i++) {
-        sortComponents(currentBlock);
         db[count++] = database[i];
     }
 
@@ -90,6 +89,7 @@ static Block **parseStream(FILE *file, Block **database, int dbCount, int *outCo
                     capacity *= 2;
                     db = realloc(db, capacity * sizeof(Block *));
                 }
+                sortComponents(currentBlock);
                 db[count++] = currentBlock;
                 currentBlock = NULL;
             }

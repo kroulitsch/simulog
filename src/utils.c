@@ -211,6 +211,7 @@ Block *getComponent(Block *b, char *name) {
  * @returns Boolean value, basically a cycle detection check, `true` if the circuit is acyclic, `false` if a cycle has been detected.
  */
 bool sortComponents(Block *b) {
+    if (!b) return false;
     if (b->basic || b->compCount == 0) return true;
 
     int *indegree = calloc(b->compCount, sizeof(int));
