@@ -2,7 +2,8 @@ CC = gcc
 INCDIR = include
 SRCDIR = src
 APIDIR = api
-CFLAGS = -Wall -Wextra -g -I$(INCDIR)
+THIRDDIR = thirdparty
+CFLAGS = -Wall -Wextra -g -I$(INCDIR) -I$(THIRDDIR)
 
 PROG = main
 API = api_app
@@ -10,9 +11,12 @@ API = api_app
 C_FILES = $(wildcard $(SRCDIR)/*.c)
 SRC_OBJS = $(C_FILES:.c=.o)
 
+THIRD_FILES = $(wildcard $(THIRDDIR)/*.c)
+THIRD_OBJS = $(THIRD_FILES:.c=.o)
+
 MAIN_OBJS = $(PROG).o $(SRC_OBJS)
-API_OBJS = $(APIDIR)/api.o $(OBJS)
-H_FILES = $(wildcard $(INCDIR)/*.h) $(wildcard $(APIDIR)/*.h)
+API_OBJS = $(APIDIR)/api.o $(SRC_OBJS) $(THIRD_OBJS)
+H_FILES = $(wildcard $(INCDIR)/*.h) $(wildcard $(APIDIR)/*.h) $(wildcard $(THIRDDIR)/*.h)
 
 all: $(PROG)
 
@@ -29,6 +33,9 @@ $(SRCDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(APIDIR)/%.o: $(APIDIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(THIRDDIR)/%.o: $(THIRDDIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(MAIN_OBJS) $(API_OBJS): $(H_FILES)
