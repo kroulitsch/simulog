@@ -4,7 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static void removePinFromConnTo(Pin *source, Pin *target) {
+void removePinFromConnTo(Pin *source, Pin *target) {
     if (!source || !target) return;
     for (int i = 0; i < source->connCount; i++) {
         if (source->connTo[i] == target) {
@@ -18,7 +18,7 @@ static void removePinFromConnTo(Pin *source, Pin *target) {
     }
 }
 
-static void appendBlockToFile(FILE *f, Block *b) {
+void appendBlockToFile(FILE *f, Block *b) {
     fprintf(f, "block: %s\n", b->name ? b->name : "Unnamed");
 
     fprintf(f, "in: ");
