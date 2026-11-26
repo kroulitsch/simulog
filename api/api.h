@@ -13,10 +13,7 @@
 #include <arpa/inet.h>
 #undef connect
 
-#include "basics.h"
-#include "parser.h"
-#include "utils.h"
-#include "verification.h"
+#include "session.h"
 
 #define PORT 8080
 #define BUFFER_SIZE 8192

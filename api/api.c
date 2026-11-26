@@ -122,6 +122,7 @@ void handleRequest(int clientFd, const char *rawRequest) {
     if (strcmp(method, "POST") == 0 && strcmp(endpoint, "/stop") == 0) {
         sendResponse(clientFd, "200 OK", NULL);
         running = 0;
+        freeDatabase(db, dbCount);
         return;
     }
 
