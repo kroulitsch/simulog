@@ -20,7 +20,7 @@ H_FILES = $(wildcard $(INCDIR)/*.h) $(wildcard $(APIDIR)/*.h) $(wildcard $(THIRD
 
 DATABASE = database.simulog
 
-all: $(PROG)
+all: $(API)
 
 $(PROG): $(MAIN_OBJS)
 	$(CC) $(CFLAGS) $(MAIN_OBJS) -o $(PROG)
@@ -51,7 +51,7 @@ clean:
 run: $(PROG)
 	./$(PROG)
 
-api: $(API)
-	./$(API)
+# api: $(API)
+# 	./$(API)
 
 .PHONY: all v clean run api
