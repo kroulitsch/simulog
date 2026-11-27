@@ -1,0 +1,116 @@
+#include "utils.h"
+#include "basics.h"
+#include "verification.h"
+#include "parser.h"
+
+int main(/*int argc, char *argv[]*/) {
+    Block **basics = getBasics();
+
+    draw(basics[AND]);
+    flip(basics[AND]->inputs[0], true);
+    draw(basics[AND]);
+    flip(basics[AND]->inputs[1], true);
+    draw(basics[AND]);
+    flip(basics[AND]->inputs[0], false);
+    draw(basics[AND]);
+
+    if (verifyBlock(basics[AND], "00", "0") &&
+        verifyBlock(basics[AND], "10", "0") &&
+        verifyBlock(basics[AND], "01", "0") &&
+        verifyBlock(basics[AND], "11", "1")) {
+        printf("AND gate: PASSED\n");
+    } else {
+        printf("AND gate: FAILED\n");
+    }
+
+    drawTruthTable(basics[AND]);
+
+    draw(basics[NOT]);
+    flip(basics[NOT]->inputs[0], true);
+    draw(basics[NOT]);
+
+    if (verifyBlock(basics[NOT], "0", "1") &&
+        verifyBlock(basics[NOT], "1", "0")) {
+        printf("NOT gate: PASSED\n");
+    } else {
+        printf("NOT gate: FAILED\n");
+    }
+
+    drawTruthTable(basics[NOT]);
+
+    draw(basics[NAND]);
+    flip(basics[NAND]->inputs[0], true);
+    draw(basics[NAND]);
+    flip(basics[NAND]->inputs[1], true);
+    draw(basics[NAND]);
+    flip(basics[NAND]->inputs[0], false);
+    draw(basics[NAND]);
+
+    if (verifyBlock(basics[NAND], "00", "1") &&
+        verifyBlock(basics[NAND], "10", "1") &&
+        verifyBlock(basics[NAND], "01", "1") &&
+        verifyBlock(basics[NAND], "11", "0")) {
+        printf("NAND gate: PASSED\n");
+    } else {
+        printf("NAND gate: FAILED\n");
+    }
+
+    drawTruthTable(basics[NAND]);
+
+    draw(basics[OR]);
+    flip(basics[OR]->inputs[0], true);
+    draw(basics[OR]);
+    flip(basics[OR]->inputs[1], true);
+    draw(basics[OR]);
+    flip(basics[OR]->inputs[0], false);
+    draw(basics[OR]);
+
+    if (verifyBlock(basics[OR], "00", "0") &&
+        verifyBlock(basics[OR], "10", "1") &&
+        verifyBlock(basics[OR], "01", "1") &&
+        verifyBlock(basics[OR], "11", "1")) {
+        printf("OR gate: PASSED\n");
+    } else {
+        printf("OR gate: FAILED\n");
+    }
+
+    drawTruthTable(basics[OR]);
+
+    int outCount = 0;
+
+    Block **parsedBlocks = parseFile("file_examples/ex2.simulog", basics, BASICS_SIZE, &outCount);
+
+    Block *xor = getBlock(parsedBlocks, outCount, "XOR");
+
+    draw(xor);
+    flip(xor->inputs[0], true);
+    draw(xor);
+    flip(xor->inputs[1], true);
+    draw(xor);
+    flip(xor->inputs[0], false);
+    draw(xor);
+
+    if (verifyBlock(xor, "00", "0") &&
+        verifyBlock(xor, "10", "1") &&
+        verifyBlock(xor, "01", "1") &&
+        verifyBlock(xor, "11", "0")) {
+        printf("XOR gate: PASSED\n");
+    } else {
+        printf("XOR gate: FAILED\n");
+    }
+
+    drawTruthTable(xor);
+
+    exportToDot(xor, "xor.dot");
+    exportToDot(getComponent(xor, "OR_FINAL"), "or_final.dot");
+
+    // cleanup
+    for (int i = 0; i < outCount; i++) {
+        freeBlock(parsedBlocks[i]);
+    }
+    free(parsedBlocks);
+
+    free(basics);
+
+    return 0;
+}
