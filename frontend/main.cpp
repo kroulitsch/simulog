@@ -9,6 +9,9 @@
 #include <QDir>
 #include <QUrl>
 #include <QDebug>
+#include <QThread>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 struct ApiResponse {
     int statusCode = 0;
@@ -79,6 +82,15 @@ int main(int argc, char *argv[]) {
                    << "Error:" << serverProcess.errorString();
     }
 
+    ApiResponse startupRes;
+    for (int attempt = 0; attempt < 20; ++attempt) {
+        startupRes = sendRequest(netManager, "GET", "/startup", QByteArray(), "application/json", 200);
+        if (startupRes.ok) {
+            break;
+        }
+        QThread::msleep(50);
+    }
+
     QObject::connect(&app, &QCoreApplication::aboutToQuit, [&]() {
         if (serverProcess.state() == QProcess::Running) {
             sendRequest(netManager, "POST", "/stop");
@@ -90,6 +102,14 @@ int main(int argc, char *argv[]) {
     });
 
     QQmlApplicationEngine engine;
+
+    if (startupRes.ok) {
+        QJsonDocument doc = QJsonDocument::fromJson(startupRes.body);
+        engine.setInitialProperties({
+            { "initialDatabase", doc.object().toVariantMap() }
+        });
+    }
+
     const QUrl url(QStringLiteral("qrc:/Simulog/Main.qml"));
     QObject::connect(
         &engine,

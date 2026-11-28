@@ -8,6 +8,12 @@ ApplicationWindow {
     visible: true
     title: qsTr("Simulog")
 
+    property var initialDatabase: ({ database: [] })
+
+    Component.onCompleted: {
+        console.log("Načteno bloků při startu:", initialDatabase.database.length)
+    }
+
     function sendRequest(method, endpoint, payload, callback, contentType) {
         var xhr = new XMLHttpRequest();
         xhr.open(method, "http://localhost:8080" + endpoint, true);
