@@ -16,6 +16,7 @@ qt_add_qml_module(appSimulog
     VERSION 1.0
     QML_FILES
         Main.qml
+        Block.qml
 )
 
 set_target_properties(appSimulog PROPERTIES
